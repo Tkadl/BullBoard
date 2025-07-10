@@ -32,42 +32,38 @@ try:
     st.write(f"**Last analysis for {df['symbol'].nunique()} stocks.**")
 
     # --- Ticker Dropdown for Filtering ---
-if 'symbol' in df.columns:
-    unique_syms = sorted(df['symbol'].unique())
-    selected_syms = st.multiselect(
-        "Select stocks for analysis",
-        unique_syms,
-        default=unique_syms[:5]
-    )
-    # Filter your dataframe by selected symbols
-    filtered_df = df[df['symbol'].isin(selected_syms)]
-else:
-    filtered_df = df  # fallback if 'symbol' not present
+    if 'symbol' in df.columns:
+        unique_syms = sorted(df['symbol'].unique())
+        selected_syms = st.multiselect(
+            "Select stocks for analysis",
+            unique_syms,
+            default=unique_syms[:5]
+        )
+        # Filter your dataframe by selected symbols
+        filtered_df = df[df['symbol'].isin(selected_syms)]
+    else:
+        filtered_df = df  # fallback if 'symbol' not present
 
     # Display score table
     st.subheader("Summary Table")
-    st.dataframe(df)
+    st.dataframe(filtered_df)
 
     # Show Top N
     N = st.number_input("Show top N stocks by risk/yield:", 1, 30, 10)
     st.write("**Top by risk score:**")
-    st.dataframe(df.sort_values("custom_risk_score", ascending=False).head(N)[["symbol", "custom_risk_score", "rolling_yield_21"]])
+    st.dataframe(filtered_df.sort_values("custom_risk_score", ascending=False).head(N)[["symbol", "custom_risk_score", "rolling_yield_21"]])
 
     st.write("**Top by rolling yield:**")
-    st.dataframe(df.sort_values("rolling_yield_21", ascending=False).head(N)[["symbol", "rolling_yield_21", "custom_risk_score"]])
+    st.dataframe(filtered_df.sort_values("rolling_yield_21", ascending=False).head(N)[["symbol", "rolling_yield_21", "custom_risk_score"]])
 
     # Select stocks for visualization
     st.subheader("Visualize Price Timeline")
-    symbols = df['symbol'].tolist()
+    symbols = filtered_df['symbol'].tolist()
     selected = st.multiselect("Select stocks to plot", symbols, default=symbols[:min(3, len(symbols))])
     if selected:
-        data_full = pd.read_csv("latest_results.csv")
         for symbol in selected:
-            # You will likely want to load price history from a separate CSV (not just the summary)
-            # Here we only plot points from the summary table.
-            # For a true line plot with time, you can save the entire time series to a CSV during ETL.
             st.write(f"**{symbol} Analytic Snapshot**")
-            filtered = df[df['symbol'] == symbol]
+            filtered = filtered_df[filtered_df['symbol'] == symbol]
             if not filtered.empty:
                 fig, ax = plt.subplots(figsize=(8, 3))
                 ax.bar(["Risk", "Yield", "Sharpe"], [
@@ -80,5 +76,3 @@ else:
 
 except Exception as e:
     st.warning("No results file found. Please run the ETL pipeline first.")
-
-st.info("Tip: You can update the code in GitHub and Streamlit Cloud will auto-refresh this app.")
