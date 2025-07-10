@@ -25,6 +25,7 @@ if st.button("Run ETL Pipeline Now"):
         import etl
         etl.main()
     st.success("ETL Pipeline complete! Reloading data...")
+    st.experimental_rerun()
 
 # Try to load resulting CSV
 try:
