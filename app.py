@@ -25,7 +25,7 @@ if st.button("Run ETL Pipeline Now"):
         import etl
         etl.main()
     st.success("ETL Pipeline complete! Reloading data...")
-    st.experimental_rerun()
+    st.rerun()  # Modern Streamlit: use st.rerun() instead of st.experimental_rerun()
 
 # SAFELY load CSV (only, nothing else)
 try:
@@ -90,9 +90,7 @@ if filtered_df.empty:
 
 # Display score table
 st.subheader("Summary Table")
-st.dataframe(
-    filtered_df,
-)
+st.dataframe(filtered_df)
 
 # Show Top N
 N = st.number_input("Show top N stocks by risk/yield:",
