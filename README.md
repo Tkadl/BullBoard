@@ -42,3 +42,6 @@ Project Hygiene:
 Deployment:
  Deploy on Streamlit Community Cloud
  Instructions for deploying/replicating
+
+RANDOM THOUGHTS FOR FUTURE:
+Možnost konfigurace custom investiční strategie a její následná implementace do aplikace, user definuje pouze časové rozmezí a vybere akcie, plugin mu vypočítá parametry investiční strategie aplikované na dané stocks v definovaném timeframu.
