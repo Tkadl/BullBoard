@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-st.title("StoxPlanner: Stock Risk/Yield Dashboard")
+st.title("BullBoard")
 
 # Button to run ETL pipeline
 if st.button("Run ETL Pipeline Now"):
