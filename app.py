@@ -140,4 +140,40 @@ summary = (
         total_return = ("Close", lambda x: (x.iloc[-1] / x.iloc[0]) - 1 if len(x) > 1 and x.iloc[0] != 0 else np.nan),
         volatility_21 = ("volatility_21", "mean"),
         avg_rolling_yield_21 = ("rolling_yield_21", "mean"),
-        avg
+        avg_sharpe_21 = ("sharpe_21", "mean"),
+        avg_max_drawdown_63 = ("max_drawdown_63", "mean"),
+        avg_custom_risk_score = ("custom_risk_score", "mean"),
+    )
+    .reset_index()
+)
+
+st.subheader("Summary Table (Aggregated per Ticker for Selected Period)")
+st.dataframe(summary)
+
+# Show Top N
+if not summary.empty:
+    N = st.number_input("Show top N stocks by risk/yield:",
+                        min_value=1,
+                        max_value=len(summary),
+                        value=min(10, len(summary)))
+    st.write("**Top by average risk score:**")
+    st.dataframe(summary.sort_values("avg_custom_risk_score", ascending=False).head(N)
+                 [["symbol", "avg_custom_risk_score", "avg_rolling_yield_21"]])
+
+    st.write("**Top by average rolling yield:**")
+    st.dataframe(summary.sort_values("avg_rolling_yield_21", ascending=False).head(N)
+                 [["symbol", "avg_rolling_yield_21", "avg_custom_risk_score"]])
+
+# Visualizations
+st.subheader("Visualize Aggregate Metrics Timeline or Compare Across Tickers")
+symbols = summary['symbol'].tolist()
+selected = st.multiselect("Select stocks to plot", symbols, default=symbols[:min(3, len(symbols))])
+if selected:
+    st.write("**Side-by-side bar plot of risk/yield metrics (Averages over period):**")
+    filtered = summary[summary['symbol'].isin(selected)]
+    for metric, label in [
+        ("avg_custom_risk_score", "Avg Risk"),
+        ("avg_rolling_yield_21", "Avg Yield"),
+        ("avg_sharpe_21", "Avg Sharpe"),
+    ]:
+        st.bar_chart(filtered.set_index("symbol")[[metric]].rename(columns={metric: label}))
