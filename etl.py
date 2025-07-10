@@ -95,7 +95,7 @@ def main():
     latest.reset_index(drop=True, inplace=True)
 
     # Save summary table for Streamlit app
-    latest.to_csv("latest_results.csv", index=False)
+    df.to_csv("latest_results.csv", index=False)
 
 if __name__ == "__main__":
     main()
