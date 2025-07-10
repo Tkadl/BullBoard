@@ -3,7 +3,21 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-st.title("BullBoard")
+st.set_page_config(
+    page_title="BullBoard - Risk/Yield Dashboard",
+    layout="wide"
+)
+
+st.title("🐂 BullBoard: Stock Risk & Yield Planner")
+
+st.markdown(
+    """
+    <div style="background-color: #262730; border-radius: 10px; padding: 18px; margin-bottom:20px;">
+    <h3 style="margin-bottom:10px;color:#FAFAFA;">Welcome to BullBoard!</h3>
+    <p style="color:#FAFAFA;">Analyze stock risk and yield, get actionable insights, and visualize performance easily.</p>
+    </div>
+    """, unsafe_allow_html=True
+)
 
 # Button to run ETL pipeline
 if st.button("Run ETL Pipeline Now"):
