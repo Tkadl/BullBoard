@@ -92,7 +92,6 @@ if filtered_df.empty:
 st.subheader("Summary Table")
 st.dataframe(
     filtered_df,
-    help="Table is interactive! Click headers to sort. Use search to find stocks."
 )
 
 # Show Top N
