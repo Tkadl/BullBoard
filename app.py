@@ -105,6 +105,13 @@ st.dataframe(filtered_df.sort_values("custom_risk_score", ascending=False).head(
 st.write("**Top by rolling yield:**")
 st.dataframe(filtered_df.sort_values("rolling_yield_21", ascending=False).head(N)
              [["symbol", "rolling_yield_21", "custom_risk_score"]])
+#manual csv download
+import os
+if os.path.exists("latest_results.csv"):
+    with open("latest_results.csv", "rb") as file:
+        st.download_button("Download Latest Results CSV", file, file_name="latest_results.csv")
+else:
+    st.info("No CSV to download yet.")
 
 # Visualizations
 st.subheader("Visualize Price Timeline")
