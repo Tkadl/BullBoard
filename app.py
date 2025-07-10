@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import io
+from fpdf import FPDF
 
 st.set_page_config(
     page_title="BullBoard - Risk/Yield Dashboard",
@@ -18,6 +20,33 @@ st.markdown(
     </div>
     """, unsafe_allow_html=True
 )
+
+# ============== PDF Export Function ==============
+def dataframe_to_pdf(df, title="BullBoard Summary Table"):
+    pdf = FPDF(orientation="L", unit="mm", format="A4")
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(0, 10, txt=title, ln=True, align="C")
+    pdf.ln(5)
+
+    col_width = pdf.w / (len(df.columns) + 1)
+    row_height = pdf.font_size + 2
+
+    # Table header
+    for col in df.columns:
+        pdf.cell(col_width, row_height, str(col), border=1)
+    pdf.ln(row_height)
+
+    # Table rows (limit to 30 for sanity)
+    for i, row in df.head(30).iterrows():
+        for col in df.columns:
+            cell_data = str(row[col])[:20]  # Clip long text for PDF display
+            pdf.cell(col_width, row_height, cell_data, border=1)
+        pdf.ln(row_height)
+
+    return pdf.output(dest="S").encode("latin-1")
+
+# ============== END PDF Export Function ==============
 
 # Button to run ETL pipeline
 if st.button("Run ETL Pipeline Now"):
@@ -93,7 +122,6 @@ if filtered_df.empty:
     st.warning("No data matches selected stocks/dates. Try selecting more stocks or changing the date range.")
     st.stop()
 
-
 # ----------- HEALTH REPORT PANEL ----------- #
 def health_report_panel(filtered_df, summary, selected_syms, min_date, max_date):
     st.markdown("## 🩺 Data Health & Analytics Validity")
@@ -120,8 +148,8 @@ def health_report_panel(filtered_df, summary, selected_syms, min_date, max_date)
             symbol_dates = filtered_df[filtered_df['symbol'] == sx]['Date']
             if not symbol_dates.empty:
                 start, end = symbol_dates.min(), symbol_dates.max()
-                # Allow 1 day slippage (e.g. market holidays)
                 cov_warn = ""
+                # Allow 1 day slippage (e.g. market holidays)
                 if (min_date is not None and (start > min_date + pd.Timedelta(days=1))) or \
                    (max_date is not None and (end < max_date - pd.Timedelta(days=1))):
                     cov_warn = "Incomplete"
@@ -154,9 +182,7 @@ def health_report_panel(filtered_df, summary, selected_syms, min_date, max_date)
         if not problems:
             st.info("✔️ No issues detected. Your analytics passed all health checks!")
 
-
-# ----------- PORTFOLIO-LEVEL AGGREGATED ANALYTICS ----------- #
-# The summary table is needed for NaN detection, so do grouping before health check
+# ----------- SUMMARY: AGGREGATED BY TICKER ----------- #
 summary = (
     filtered_df
     .groupby("symbol")
@@ -176,24 +202,26 @@ summary = (
     .reset_index()
 )
 
-# HEALTH PANEL: Must come after min_date/max_date defined
+# ----------- HEALTH PANEL ----------- #
 health_report_panel(
     filtered_df, summary, selected_syms,
     min_date=min_date if 'min_date' in locals() else None,
     max_date=max_date if 'max_date' in locals() else None
 )
 
-# -- Portfolio Analytics --
+# ----------- PORTFOLIO-LEVEL AGGREGATED ANALYTICS ----------- #
+portfolio_returns = None
 if filtered_df['symbol'].nunique() > 1:
     close_pivot = (
         filtered_df.pivot(index="Date", columns="symbol", values="Close")
         .sort_index()
         .ffill()
-        .dropna(axis=0, how='any')  # Only keep dates where data for all symbols available
+        .dropna(axis=0, how='any')
     )
     if close_pivot.shape[0] > 1:
         returns = close_pivot.pct_change().dropna(how='any')
         port_daily = returns.mean(axis=1)
+        portfolio_returns = port_daily  # For export
         port_total_return = (close_pivot.iloc[-1].mean() / close_pivot.iloc[0].mean()) - 1
         port_annualized_return = port_daily.mean() * 252
         port_annualized_vol = port_daily.std() * np.sqrt(252)
@@ -216,6 +244,38 @@ if filtered_df['symbol'].nunique() > 1:
         st.info("Not enough overlapping data to compute portfolio analytics.")
 else:
     st.info("Select at least two stocks to see portfolio-level analytics.")
+
+# ----------- EXPORT/DOWNLOAD ----------- #
+st.subheader("⬇️ Download Analysis Output")
+
+# Export summary table (CSV)
+if not summary.empty:
+    csv = summary.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        label="Download Aggregated Summary Table (CSV)",
+        data=csv,
+        file_name="bullboard_summary.csv",
+        mime='text/csv'
+    )
+    # Export summary table (PDF)
+    pdf_bytes = dataframe_to_pdf(summary, title="BullBoard Summary Table")
+    st.download_button(
+        label="Download Aggregated Summary Table (PDF)",
+        data=pdf_bytes,
+        file_name="bullboard_summary.pdf",
+        mime="application/pdf"
+    )
+
+# Export portfolio returns (CSV)
+if portfolio_returns is not None:
+    port_df = pd.DataFrame({"Date": portfolio_returns.index, "PortfolioDailyReturn": portfolio_returns.values})
+    port_csv = port_df.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        label="Download Portfolio Daily Returns (CSV)",
+        data=port_csv,
+        file_name="bullboard_portfolio_returns.csv",
+        mime='text/csv'
+    )
 
 # ----------- SUMMARY: AGGREGATED BY TICKER ----------- #
 st.subheader("Summary Table (Aggregated per Ticker for Selected Period)")
