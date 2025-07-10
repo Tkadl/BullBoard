@@ -25,9 +25,9 @@ if st.button("Run ETL Pipeline Now"):
         import etl
         etl.main()
     st.success("ETL Pipeline complete! Reloading data...")
-    st.rerun()  # Modern Streamlit: use st.rerun() instead of st.experimental_rerun()
+    st.rerun()  # Modern Streamlit: use st.rerun()
 
-# SAFELY load CSV (only, nothing else)
+# SAFELY load CSV
 try:
     df = pd.read_csv("latest_results.csv", parse_dates=["Date"])
 except Exception as e:
@@ -75,57 +75,71 @@ else:
 # -- METRIC EXPLANATIONS TOOLTIP BOX --
 with st.expander("💡 Metric Explanations"):
     st.markdown("""
-    **custom_risk_score**: Composite risk (0.7×21d volatility + 0.3×63d drawdown), higher is riskier  
-    **rolling_yield_21**: 21-day rolling mean of daily returns — recent 'drift' (positive, negative, or flat)  
-    **sharpe_21**: Risk-adjusted annualized return over 21 days (higher = better)  
-    **volatility_21**: "Wiggliness" — std deviation of daily return, 21-day window  
-    **max_drawdown_63**: Largest price drop from peak over the last 63 days  
+    **period_start/period_end**: Start and end dates for analysis window  
+    **period_days**: Number of analyzed dates per ticker  
+    **avg_close**: Average close price across window  
+    **avg_daily_return**: Average daily % return  
+    **total_return**: Overall percent change from first to last day in window  
+    **volatility_21**: Average 21-day rolling volatility (windowed std), annualized  
+    **avg_rolling_yield_21**: Mean 21-day rolling average daily yield  
+    **avg_sharpe_21**: Mean 21-day rolling Sharpe ratio (risk-adjusted yield)  
+    **avg_max_drawdown_63**: Mean 63-day max drawdown  
+    **avg_custom_risk_score**: Mean weighted risk score (see above)  
     """)
 
-st.caption("📊 Click column headers to sort, or use the search box (upper right of table) to filter.")
+st.caption("📊 All metrics below are aggregated per ticker for your selected period.")
 
 if filtered_df.empty:
     st.warning("No data matches selected stocks/dates. Try selecting more stocks or changing the date range.")
     st.stop()
 
-# Display score table
-st.subheader("Summary Table")
-st.dataframe(filtered_df)
+# ----------- SUMMARY: AGGREGATED BY TICKER ----------- #
+summary = (
+    filtered_df
+    .groupby("symbol")
+    .agg(
+        period_start = ("Date", "min"),
+        period_end = ("Date", "max"),
+        period_days = ("Date", "count"),
+        avg_close = ("Close", "mean"),
+        avg_daily_return = ("daily_return", "mean"),
+        total_return = ("Close", lambda x: (x.iloc[-1] / x.iloc[0]) - 1 if len(x) > 1 and x.iloc[0] != 0 else np.nan),
+        volatility_21 = ("volatility_21", "mean"),
+        avg_rolling_yield_21 = ("rolling_yield_21", "mean"),
+        avg_sharpe_21 = ("sharpe_21", "mean"),
+        avg_max_drawdown_63 = ("max_drawdown_63", "mean"),
+        avg_custom_risk_score = ("custom_risk_score", "mean"),
+    )
+    .reset_index()
+)
+
+st.subheader("Summary Table (Aggregated per Ticker for Selected Period)")
+st.dataframe(summary)
 
 # Show Top N
-N = st.number_input("Show top N stocks by risk/yield:",
-                    min_value=1,
-                    max_value=len(filtered_df),
-                    value=min(10, len(filtered_df)))
+if not summary.empty:
+    N = st.number_input("Show top N stocks by risk/yield:",
+                        min_value=1,
+                        max_value=len(summary),
+                        value=min(10, len(summary)))
+    st.write("**Top by average risk score:**")
+    st.dataframe(summary.sort_values("avg_custom_risk_score", ascending=False).head(N)
+                 [["symbol", "avg_custom_risk_score", "avg_rolling_yield_21"]])
 
-st.write("**Top by risk score:**")
-st.dataframe(filtered_df.sort_values("custom_risk_score", ascending=False).head(N)
-             [["symbol", "custom_risk_score", "rolling_yield_21"]])
-
-st.write("**Top by rolling yield:**")
-st.dataframe(filtered_df.sort_values("rolling_yield_21", ascending=False).head(N)
-             [["symbol", "rolling_yield_21", "custom_risk_score"]])
-#manual csv download
-import os
-if os.path.exists("latest_results.csv"):
-    with open("latest_results.csv", "rb") as file:
-        st.download_button("Download Latest Results CSV", file, file_name="latest_results.csv")
-else:
-    st.info("No CSV to download yet.")
+    st.write("**Top by average rolling yield:**")
+    st.dataframe(summary.sort_values("avg_rolling_yield_21", ascending=False).head(N)
+                 [["symbol", "avg_rolling_yield_21", "avg_custom_risk_score"]])
 
 # Visualizations
-st.subheader("Visualize Price Timeline")
-symbols = filtered_df['symbol'].tolist()
+st.subheader("Visualize Aggregate Metrics Timeline or Compare Across Tickers")
+
+symbols = summary['symbol'].tolist()
 selected = st.multiselect("Select stocks to plot", symbols, default=symbols[:min(3, len(symbols))])
-for symbol in selected:
-    st.write(f"**{symbol} Analytic Snapshot**")
-    filtered = filtered_df[filtered_df['symbol'] == symbol]
-    if not filtered.empty:
-        fig, ax = plt.subplots(figsize=(8, 3))
-        ax.bar(["Risk", "Yield", "Sharpe"], [
-            filtered["custom_risk_score"].values[0],
-            filtered["rolling_yield_21"].values[0],
-            filtered["sharpe_21"].values[0]
-        ])
-        ax.set_title(f"{symbol} (Risk/Yield/Sharpe)")
-        st.pyplot(fig)
+
+if selected:
+    st.write("**Side-by-side bar plot of risk/yield metrics (Averages over period):**")
+    filtered = summary[summary['symbol'].isin(selected)]
+    for metric, label in [("avg_custom_risk_score", "Avg Risk"),
+                          ("avg_rolling_yield_21", "Avg Yield"),
+                          ("avg_sharpe_21", "Avg Sharpe")]:
+        st.bar_chart(filtered.set_index("symbol")[[metric]].rename(columns={metric: label}))
