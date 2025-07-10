@@ -93,7 +93,97 @@ if filtered_df.empty:
     st.warning("No data matches selected stocks/dates. Try selecting more stocks or changing the date range.")
     st.stop()
 
+
+# ----------- HEALTH REPORT PANEL ----------- #
+def health_report_panel(filtered_df, summary, selected_syms, min_date, max_date):
+    st.markdown("## 🩺 Data Health & Analytics Validity")
+    problems = []
+    with st.container():
+        # 1. ETL Download Time(s)
+        if "download_time" in filtered_df.columns:
+            last_dl = filtered_df["download_time"].max()
+            st.write(f"**ETL Last Run:** {last_dl}")
+        else:
+            st.write("**ETL last run time not available.**")
+
+        # 2. Ticker coverage check
+        missing_syms = [s for s in selected_syms if s not in filtered_df['symbol'].unique()]
+        if missing_syms:
+            st.warning(f"⚠️ No data for: {', '.join(missing_syms)}")
+            problems.append("Missing tickers")
+        else:
+            st.success("✅ All selected tickers present in data.")
+
+        # 3. Date coverage check
+        health_msgs = []
+        for sx in selected_syms:
+            symbol_dates = filtered_df[filtered_df['symbol'] == sx]['Date']
+            if not symbol_dates.empty:
+                start, end = symbol_dates.min(), symbol_dates.max()
+                # Allow 1 day slippage (e.g. market holidays)
+                cov_warn = ""
+                if (min_date is not None and (start > min_date + pd.Timedelta(days=1))) or \
+                   (max_date is not None and (end < max_date - pd.Timedelta(days=1))):
+                    cov_warn = "Incomplete"
+                if cov_warn:
+                    health_msgs.append(f"⚠️ {sx} data from {start.date()} to {end.date()}")
+            else:
+                health_msgs.append(f"⚠️ {sx} has no data in this window.")
+        if not health_msgs:
+            st.success("✅ All symbols have full date coverage.")
+        else:
+            for msg in health_msgs:
+                st.info(msg)
+            problems.append("Incomplete date coverage")
+
+        # 4. NaN/empty columns
+        if summary is not None and not summary.empty:
+            missing_cols = summary.isnull().any()
+            nan_cols = missing_cols[missing_cols].index.tolist()
+            if nan_cols:
+                st.warning(f"⚠️ Columns with missing values: {', '.join(nan_cols)}")
+                problems.append("NaNs in summary stats")
+            else:
+                st.success("✅ No missing values in summary table.")
+
+        # 5. No filtered data at all
+        if filtered_df.empty:
+            st.error("❌ No data after filtering. Check your selection or ETL.")
+
+        # Extra tip for hygiene!
+        if not problems:
+            st.info("✔️ No issues detected. Your analytics passed all health checks!")
+
+
 # ----------- PORTFOLIO-LEVEL AGGREGATED ANALYTICS ----------- #
+# The summary table is needed for NaN detection, so do grouping before health check
+summary = (
+    filtered_df
+    .groupby("symbol")
+    .agg(
+        period_start = ("Date", "min"),
+        period_end = ("Date", "max"),
+        period_days = ("Date", "count"),
+        avg_close = ("Close", "mean"),
+        avg_daily_return = ("daily_return", "mean"),
+        total_return = ("Close", lambda x: (x.iloc[-1] / x.iloc[0]) - 1 if len(x) > 1 and x.iloc[0] != 0 else np.nan),
+        volatility_21 = ("volatility_21", "mean"),
+        avg_rolling_yield_21 = ("rolling_yield_21", "mean"),
+        avg_sharpe_21 = ("sharpe_21", "mean"),
+        avg_max_drawdown_63 = ("max_drawdown_63", "mean"),
+        avg_custom_risk_score = ("custom_risk_score", "mean"),
+    )
+    .reset_index()
+)
+
+# HEALTH PANEL: Must come after min_date/max_date defined
+health_report_panel(
+    filtered_df, summary, selected_syms,
+    min_date=min_date if 'min_date' in locals() else None,
+    max_date=max_date if 'max_date' in locals() else None
+)
+
+# -- Portfolio Analytics --
 if filtered_df['symbol'].nunique() > 1:
     close_pivot = (
         filtered_df.pivot(index="Date", columns="symbol", values="Close")
@@ -128,25 +218,6 @@ else:
     st.info("Select at least two stocks to see portfolio-level analytics.")
 
 # ----------- SUMMARY: AGGREGATED BY TICKER ----------- #
-summary = (
-    filtered_df
-    .groupby("symbol")
-    .agg(
-        period_start = ("Date", "min"),
-        period_end = ("Date", "max"),
-        period_days = ("Date", "count"),
-        avg_close = ("Close", "mean"),
-        avg_daily_return = ("daily_return", "mean"),
-        total_return = ("Close", lambda x: (x.iloc[-1] / x.iloc[0]) - 1 if len(x) > 1 and x.iloc[0] != 0 else np.nan),
-        volatility_21 = ("volatility_21", "mean"),
-        avg_rolling_yield_21 = ("rolling_yield_21", "mean"),
-        avg_sharpe_21 = ("sharpe_21", "mean"),
-        avg_max_drawdown_63 = ("max_drawdown_63", "mean"),
-        avg_custom_risk_score = ("custom_risk_score", "mean"),
-    )
-    .reset_index()
-)
-
 st.subheader("Summary Table (Aggregated per Ticker for Selected Period)")
 st.dataframe(summary)
 
