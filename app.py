@@ -25,7 +25,7 @@ if st.button("Run ETL Pipeline Now"):
         import etl
         etl.main()
     st.success("ETL Pipeline complete! Reloading data...")
-    st.rerun()  # Modern Streamlit: use st.rerun()
+    st.rerun()
 
 # SAFELY load CSV
 try:
@@ -93,6 +93,40 @@ if filtered_df.empty:
     st.warning("No data matches selected stocks/dates. Try selecting more stocks or changing the date range.")
     st.stop()
 
+# ----------- PORTFOLIO-LEVEL AGGREGATED ANALYTICS ----------- #
+if filtered_df['symbol'].nunique() > 1:
+    close_pivot = (
+        filtered_df.pivot(index="Date", columns="symbol", values="Close")
+        .sort_index()
+        .ffill()
+        .dropna(axis=0, how='any')  # Only keep dates where data for all symbols available
+    )
+    if close_pivot.shape[0] > 1:
+        returns = close_pivot.pct_change().dropna(how='any')
+        port_daily = returns.mean(axis=1)
+        port_total_return = (close_pivot.iloc[-1].mean() / close_pivot.iloc[0].mean()) - 1
+        port_annualized_return = port_daily.mean() * 252
+        port_annualized_vol = port_daily.std() * np.sqrt(252)
+        port_sharpe = port_annualized_return / port_annualized_vol if port_annualized_vol != 0 else np.nan
+        port_max_drawdown = ((port_daily.cumsum() + 1).cummax() - (port_daily.cumsum() + 1)).max()
+        port_period = f"{close_pivot.index[0].date()} – {close_pivot.index[-1].date()}"
+
+        st.markdown("### Portfolio-level Analytics (Equal-Weighted)")
+        st.write({
+            "Period": port_period,
+            "Total return": f"{port_total_return:.2%}",
+            "Annualized return": f"{port_annualized_return:.2%}",
+            "Annualized volatility": f"{port_annualized_vol:.2%}",
+            "Sharpe ratio": f"{port_sharpe:.2f}",
+            "Max drawdown": f"{port_max_drawdown:.2%}"
+        })
+
+        st.line_chart((port_daily.cumsum() + 1), use_container_width=True)
+    else:
+        st.info("Not enough overlapping data to compute portfolio analytics.")
+else:
+    st.info("Select at least two stocks to see portfolio-level analytics.")
+
 # ----------- SUMMARY: AGGREGATED BY TICKER ----------- #
 summary = (
     filtered_df
@@ -106,40 +140,4 @@ summary = (
         total_return = ("Close", lambda x: (x.iloc[-1] / x.iloc[0]) - 1 if len(x) > 1 and x.iloc[0] != 0 else np.nan),
         volatility_21 = ("volatility_21", "mean"),
         avg_rolling_yield_21 = ("rolling_yield_21", "mean"),
-        avg_sharpe_21 = ("sharpe_21", "mean"),
-        avg_max_drawdown_63 = ("max_drawdown_63", "mean"),
-        avg_custom_risk_score = ("custom_risk_score", "mean"),
-    )
-    .reset_index()
-)
-
-st.subheader("Summary Table (Aggregated per Ticker for Selected Period)")
-st.dataframe(summary)
-
-# Show Top N
-if not summary.empty:
-    N = st.number_input("Show top N stocks by risk/yield:",
-                        min_value=1,
-                        max_value=len(summary),
-                        value=min(10, len(summary)))
-    st.write("**Top by average risk score:**")
-    st.dataframe(summary.sort_values("avg_custom_risk_score", ascending=False).head(N)
-                 [["symbol", "avg_custom_risk_score", "avg_rolling_yield_21"]])
-
-    st.write("**Top by average rolling yield:**")
-    st.dataframe(summary.sort_values("avg_rolling_yield_21", ascending=False).head(N)
-                 [["symbol", "avg_rolling_yield_21", "avg_custom_risk_score"]])
-
-# Visualizations
-st.subheader("Visualize Aggregate Metrics Timeline or Compare Across Tickers")
-
-symbols = summary['symbol'].tolist()
-selected = st.multiselect("Select stocks to plot", symbols, default=symbols[:min(3, len(symbols))])
-
-if selected:
-    st.write("**Side-by-side bar plot of risk/yield metrics (Averages over period):**")
-    filtered = summary[summary['symbol'].isin(selected)]
-    for metric, label in [("avg_custom_risk_score", "Avg Risk"),
-                          ("avg_rolling_yield_21", "Avg Yield"),
-                          ("avg_sharpe_21", "Avg Sharpe")]:
-        st.bar_chart(filtered.set_index("symbol")[[metric]].rename(columns={metric: label}))
+        avg
