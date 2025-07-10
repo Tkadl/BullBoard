@@ -26,6 +26,21 @@ Rolling mean return
 Custom risk score
  Generate per-ticker summary (latest stats, daily updated)
 
+ PORTFOLIO-LEVEL AGGREGATED ANALYTICS
+Most tools show scores/stats for individual tickers, but the majority of serious investors want to know:
+- “How would a basket (my watchlist or portfolio) have performed—risk, yield, drawdown—if I’d held it over that timeframe?”
+- Even the free version of Yahoo/TradingView etc. doesn’t make this easy.
+- It creates a “wow!” moment for your users—and lays groundwork for backtesting, comparison, and eventual pro features.
+
+Add a Multi-Level Data Validation Panel + Analytics Health Report
+- Most apps don’t clearly tell users if their latest analytics are “stale,” have gaps, or have anomalies.
+- By including a compact “Health & Validity” panel, you instantly boost user trust (“No missing data, all tickers up-to-date!”) and make troubleshooting easier for yourself.
+- Data freshness: When was the ETL last run? Any tickers/rows missing recent data?
+- Ticker completeness: Are all selected tickers covered for the whole period?
+- Missing/NaN values: Any metrics/columns have missing values after the ETL or user’s filtering?
+- Warnings: e.g., “Warning: GOOGL missing data for last 5 days”, “No rows for META in this date range”, etc.
+- Visually, includes green ticks ✅ and yellow/orange exclamation signs ⚠️ for user clarity.
+
 Alerting and Ranking:
  Thresholding for custom alerts (yield, risk)
  Sort and rank stocks by yield, risk, or other analytics
