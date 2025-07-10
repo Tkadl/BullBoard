@@ -31,6 +31,19 @@ try:
     df = pd.read_csv("latest_results.csv", parse_dates=["Date"])
     st.write(f"**Last analysis for {df['symbol'].nunique()} stocks.**")
 
+    # --- Ticker Dropdown for Filtering ---
+if 'symbol' in df.columns:
+    unique_syms = sorted(df['symbol'].unique())
+    selected_syms = st.multiselect(
+        "Select stocks for analysis",
+        unique_syms,
+        default=unique_syms[:5]
+    )
+    # Filter your dataframe by selected symbols
+    filtered_df = df[df['symbol'].isin(selected_syms)]
+else:
+    filtered_df = df  # fallback if 'symbol' not present
+
     # Display score table
     st.subheader("Summary Table")
     st.dataframe(df)
