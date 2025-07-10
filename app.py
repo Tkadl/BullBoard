@@ -45,7 +45,6 @@ try:
 
     # --- Date Range Picker ---
     if 'Date' in filtered_df.columns:
-        # Ensure datetime
         filtered_df['Date'] = pd.to_datetime(filtered_df['Date'])
         min_date = filtered_df['Date'].min()
         max_date = filtered_df['Date'].max()
@@ -56,7 +55,6 @@ try:
             max_value=max_date,
             key="date_range"
         )
-        # Support both tuple/list/range
         if isinstance(date_range, (tuple, list)) and len(date_range) == 2:
             start_date, end_date = date_range
             filtered_df = filtered_df[
@@ -64,11 +62,26 @@ try:
                 (filtered_df['Date'] <= pd.to_datetime(end_date))
             ]
 
-    # Display score table
-    st.subheader("Summary Table")
-    st.dataframe(filtered_df)
+    # -- METRIC EXPLANATIONS TOOLTIP BOX --
+    with st.expander("💡 Metric Explanations"):
+        st.markdown("""
+        **custom_risk_score**: Composite risk (0.7×21d volatility + 0.3×63d drawdown), higher is riskier  
+        **rolling_yield_21**: 21-day rolling mean of daily returns — recent 'drift' (positive, negative, or flat)  
+        **sharpe_21**: Risk-adjusted annualized return over 21 days (higher = better)  
+        **volatility_21**: "Wiggliness" — std deviation of daily return, 21-day window  
+        **max_drawdown_63**: Largest price drop from peak over the last 63 days  
+        """)
 
-    # Show Top N
+    st.caption("📊 Click column headers to sort, or use the search box (upper right of table) to filter.")
+
+    # Display score table (sorting/filtering work out-of-the-box in st.dataframe!)
+    st.subheader("Summary Table")
+    st.dataframe(
+        filtered_df,
+        help="Table is interactive! Click headers to sort. Use search to find stocks."
+    )
+
+    # Show Top N - (this is still sorted result slices, not interactive filter, but it's useful)
     N = st.number_input("Show top N stocks by risk/yield:", 1, min(30, len(filtered_df)), min(10, len(filtered_df)))
     st.write("**Top by risk score:**")
     st.dataframe(filtered_df.sort_values("custom_risk_score", ascending=False).head(N)
