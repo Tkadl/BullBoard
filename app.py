@@ -176,7 +176,7 @@ def create_metric_card(label, value, change=None, change_type="neutral"):
     """
 
 def generate_advanced_insights(symbol, data, market_context=None):
-    """Generate sophisticated rule-based insights that rival AI analysis"""
+    """Generate sophisticated rule-based insights with improved logic"""
     insights = []
     
     # Extract key metrics
@@ -186,53 +186,68 @@ def generate_advanced_insights(symbol, data, market_context=None):
     volatility = data.get('volatility_21', 0)
     avg_return = data.get('avg_rolling_yield_21', 0)
     
-    # 1. MOMENTUM ANALYSIS
-    if total_return > 0.20:
-        momentum_strength = "Strong" if total_return > 0.30 else "Moderate"
-        insights.append(f"🚀 **Momentum Alert**: {symbol} shows {momentum_strength.lower()} bullish momentum with {total_return:.1%} returns")
-    elif total_return < -0.15:
-        insights.append(f"📉 **Risk Warning**: {symbol} showing bearish trend with {total_return:.1%} decline - monitor closely")
+    # Determine overall stock profile first
+    is_high_risk = risk_score > 0.08 or volatility > 0.08
+    is_low_vol = volatility < 0.03
+    is_positive_return = total_return > 0.05
+    is_negative_return = total_return < -0.10
+    is_good_sharpe = sharpe_ratio > 1.0
+    is_poor_sharpe = sharpe_ratio < 0.5
     
-    # 2. RISK-ADJUSTED PERFORMANCE ANALYSIS
-    if sharpe_ratio > 1.5 and total_return > 0.10:
-        insights.append(f"💎 **Alpha Generator**: {symbol} delivers exceptional risk-adjusted returns (Sharpe: {sharpe_ratio:.2f}) - potential portfolio cornerstone")
-    elif sharpe_ratio > 1.0:
-        insights.append(f"⭐ **Quality Pick**: {symbol} shows solid risk-adjusted performance - good addition to diversified portfolio")
-    elif sharpe_ratio < 0.3:
-        insights.append(f"⚠️ **Efficiency Warning**: {symbol} poor risk-adjusted returns - consider alternatives or position sizing")
+    # 1. MOMENTUM ANALYSIS (Primary signal)
+    if total_return > 0.25:
+        insights.append(f"🚀 **Strong Momentum**: {symbol} exceptional performance with {total_return:.1%} returns - momentum leader")
+    elif total_return > 0.15:
+        insights.append(f"📈 **Positive Momentum**: {symbol} solid uptrend with {total_return:.1%} gains")
+    elif total_return < -0.20:
+        insights.append(f"📉 **Downtrend Alert**: {symbol} severe decline of {total_return:.1%} - high risk position")
+    elif total_return < -0.10:
+        insights.append(f"⚠️ **Underperforming**: {symbol} declining {total_return:.1%} - monitor for reversal signals")
     
-    # 3. VOLATILITY REGIME ANALYSIS
-    if volatility < 0.02 and total_return > 0.05:
-        insights.append(f"🛡️ **Low-Vol Winner**: {symbol} rare combination of low volatility ({volatility:.1%}) with positive returns - ideal for conservative portfolios")
-    elif volatility > 0.08:
-        vol_category = "Extremely High" if volatility > 0.12 else "High"
-        if total_return > volatility * 2:  # Return compensates for risk
-            insights.append(f"⚡ **High-Risk Reward**: {symbol} {vol_category.lower()} volatility but returns justify the risk")
+    # 2. RISK-ADJUSTED PERFORMANCE (Quality assessment)
+    if is_good_sharpe and is_positive_return:
+        quality_level = "Exceptional" if sharpe_ratio > 1.5 else "Good"
+        insights.append(f"⭐ **{quality_level} Quality**: {symbol} delivers risk-adjusted returns (Sharpe: {sharpe_ratio:.2f})")
+    elif is_poor_sharpe and not is_low_vol:
+        insights.append(f"⚠️ **Efficiency Concern**: {symbol} poor risk-adjusted returns (Sharpe: {sharpe_ratio:.2f}) - risk may not be compensated")
+    
+    # 3. VOLATILITY & RISK ANALYSIS
+    if is_high_risk:
+        if is_good_sharpe:
+            insights.append(f"⚡ **High-Risk Reward**: {symbol} elevated volatility ({volatility:.1%}) but returns justify the risk")
         else:
-            insights.append(f"🔥 **Volatility Alert**: {symbol} {vol_category.lower()} volatility ({volatility:.1%}) - suitable only for risk-tolerant investors")
+            insights.append(f"🔥 **High Volatility**: {symbol} risky profile ({volatility:.1%}) - suitable only for aggressive investors")
+    elif is_low_vol and is_positive_return:
+        insights.append(f"🛡️ **Low-Volatility Winner**: {symbol} combines stability ({volatility:.1%} vol) with positive returns")
     
-    # 4. MARKET POSITIONING ANALYSIS
-    risk_percentile = get_risk_percentile(risk_score)
-    return_percentile = get_return_percentile(total_return)
+    # 4. PORTFOLIO ROLE (Only assign if not contradicted by other signals)
+    if is_low_vol and is_positive_return and is_good_sharpe:
+        insights.append(f"🎯 **Portfolio Core**: {symbol} ideal foundation stock - stability with growth")
+    elif is_low_vol and not is_negative_return and not is_poor_sharpe:
+        insights.append(f"⚖️ **Stability Provider**: {symbol} can help reduce portfolio volatility")
+    elif is_high_risk and is_good_sharpe:
+        insights.append(f"🎲 **Satellite Position**: {symbol} suitable for 5-10% allocation - high risk but compensated")
+    elif is_negative_return and is_high_risk:
+        insights.append(f"🔻 **Portfolio Drag**: {symbol} combining poor returns with high risk - consider reducing exposure")
     
-    if risk_percentile < 25 and return_percentile > 75:
-        insights.append(f"🏆 **Market Outperformer**: {symbol} in top quartile for returns while maintaining low risk profile")
-    elif risk_percentile > 75 and return_percentile < 25:
-        insights.append(f"💔 **Underperformer**: {symbol} high risk with poor returns - consider exit strategy")
-    
-    # 5. TREND STRENGTH ANALYSIS
-    if avg_return > 0.001:  # Positive daily average
+    # 5. TREND STRENGTH (Only for positive trends)
+    if avg_return > 0.001 and total_return > 0:
         annualized_projection = avg_return * 252
-        if annualized_projection > 0.15:
-            insights.append(f"📈 **Trend Strength**: {symbol} consistent daily gains averaging {avg_return:.3%} - projects to {annualized_projection:.1%} annually")
+        if annualized_projection > 0.20:
+            insights.append(f"📊 **Strong Trend**: {symbol} consistent daily gains ({avg_return:.3%}) project to {annualized_projection:.1%} annually")
     
-    # 6. PORTFOLIO ROLE RECOMMENDATION
-    if risk_score < 0.04 and total_return > 0.08:
-        insights.append(f"🎯 **Portfolio Core**: {symbol} ideal for portfolio foundation - low risk with steady returns")
-    elif risk_score > 0.10 and sharpe_ratio > 1.2:
-        insights.append(f"🎲 **Satellite Position**: {symbol} suitable for 5-10% portfolio allocation - high risk but compensated returns")
-    elif volatility < 0.03:
-        insights.append(f"⚖️ **Stability Anchor**: {symbol} can provide portfolio stability during market turbulence")
+    # 6. MARKET POSITIONING
+    if total_return > 0.15 and risk_score < 0.06:
+        insights.append(f"🏆 **Market Winner**: {symbol} outperforming with controlled risk - top quartile performer")
+    elif total_return < 0 and risk_score > 0.08:
+        insights.append(f"💔 **Double Negative**: {symbol} combines losses with high risk - priority review needed")
+    
+    # Ensure at least one insight if no major signals
+    if not insights:
+        if total_return > 0:
+            insights.append(f"📊 **Steady Performer**: {symbol} showing positive returns with moderate risk profile")
+        else:
+            insights.append(f"📊 **Mixed Signals**: {symbol} requires closer analysis - consider current market conditions")
     
     return insights
 
