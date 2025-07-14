@@ -5,6 +5,9 @@ import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 import datetime
+from transformers import pipeline
+import warnings
+warnings.filterwarnings("ignore")
 
 # Page configuration
 st.set_page_config(
@@ -13,7 +16,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
 # Custom CSS for modern styling
 st.markdown("""
 <style>
@@ -119,23 +121,14 @@ st.markdown("""
         color: #2980b9;
     }
     
-    /* Action Button */
-    .action-button {
+    /* AI Insight Cards */
+    .ai-insight {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 0.75rem 1.5rem;
-        border: none;
+        padding: 1rem;
         border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        display: inline-block;
-    }
-    
-    .action-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        margin: 0.5rem 0;
+        border-left: 4px solid #ffd700;
     }
     
     /* Section Headers */
@@ -152,20 +145,6 @@ st.markdown("""
         margin-right: 0.5rem;
     }
     
-    /* Portfolio Summary */
-    .portfolio-summary {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        color: white;
-        padding: 2rem;
-        border-radius: 12px;
-        margin: 1rem 0;
-    }
-    
-    /* Risk Level Indicators */
-    .risk-low { border-left-color: #2ecc71 !important; }
-    .risk-medium { border-left-color: #f39c12 !important; }
-    .risk-high { border-left-color: #e74c3c !important; }
-    
     /* Hide Streamlit Branding */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -178,7 +157,7 @@ def create_header():
     st.markdown("""
     <div class="main-header">
         <h1>🐂 BullBoard</h1>
-        <p>Advanced Stock Risk & Yield Analytics Platform</p>
+        <p>Advanced Stock Risk & Yield Analytics Platform with AI Insights</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -197,9 +176,80 @@ def create_metric_card(label, value, change=None, change_type="neutral"):
     </div>
     """
 
-def create_status_card(message, status_type="info"):
-    """Create a status card"""
-    return f'<div class="status-card status-{status_type}">{message}</div>'
+@st.cache_resource
+def load_ai_models():
+    """Load AI models - runs on Streamlit's servers"""
+    try:
+        sentiment_analyzer = pipeline(
+            "sentiment-analysis",
+            model="cardiffnlp/twitter-roberta-base-sentiment-latest",
+            max_length=256,
+            truncation=True
+        )
+        return {"sentiment": sentiment_analyzer, "status": "loaded"}
+    except Exception as e:
+        return {"status": "failed", "error": str(e)}
+
+def generate_ai_insights(symbol, data):
+    """Generate AI insights for stocks"""
+    ai_models = load_ai_models()
+    insights = []
+    
+    if ai_models["status"] == "loaded":
+        try:
+            # Create analysis text
+            performance = "strong" if data.get('total_return', 0) > 0.1 else "weak" if data.get('total_return', 0) < -0.05 else "moderate"
+            risk_level = "high" if data.get('avg_custom_risk_score', 0) > 0.08 else "low" if data.get('avg_custom_risk_score', 0) < 0.05 else "moderate"
+            
+            analysis_text = f"{symbol} demonstrates {performance} performance characteristics with {risk_level} risk profile in current market conditions"
+            
+            # Get AI sentiment
+            result = ai_models["sentiment"](analysis_text)[0]
+            
+            if result['label'] == 'LABEL_2' and result['score'] > 0.6:  # Positive
+                insights.append(f"🤖 AI Analysis: Bullish sentiment detected for {symbol} - favorable risk-reward profile")
+            elif result['label'] == 'LABEL_0' and result['score'] > 0.6:  # Negative  
+                insights.append(f"🤖 AI Analysis: Bearish sentiment for {symbol} - exercise caution")
+            else:
+                insights.append(f"🤖 AI Analysis: Neutral outlook for {symbol} - balanced risk assessment")
+                
+        except Exception as e:
+            insights.append(f"🤖 AI Analysis temporarily unavailable")
+    else:
+        insights.append(f"🤖 AI models loading... Using rule-based analysis")
+    
+    return insights
+
+def generate_sophisticated_insights(symbol, data):
+    """Generate sophisticated rule-based insights"""
+    insights = []
+    
+    # Risk-Return Analysis
+    risk_score = data.get('avg_custom_risk_score', 0)
+    total_return = data.get('total_return', 0)
+    sharpe_ratio = data.get('avg_sharpe_21', 0)
+    
+    # Sophisticated risk analysis
+    if risk_score < 0.04 and total_return > 0.15:
+        insights.append(f"💎 {symbol}: Rare low-risk, high-return opportunity detected ({total_return:.1%} return, {risk_score:.3f} risk score)")
+    elif risk_score > 0.10 and total_return > 0.20:
+        insights.append(f"⚡ {symbol}: High-risk, high-reward play - {total_return:.1%} returns with elevated volatility")
+    elif risk_score < 0.05:
+        insights.append(f"🛡️ {symbol}: Conservative choice with consistent performance profile")
+    
+    # Sharpe ratio insights
+    if sharpe_ratio > 1.5:
+        insights.append(f"⭐ {symbol}: Exceptional risk-adjusted returns (Sharpe: {sharpe_ratio:.2f}) - top-tier performer")
+    elif sharpe_ratio < 0.5:
+        insights.append(f"⚠️ {symbol}: Poor risk-adjusted returns - consider alternatives")
+    
+    # Performance categorization
+    if total_return > 0.25:
+        insights.append(f"🚀 {symbol}: Strong outperformer with {total_return:.1%} total returns")
+    elif total_return < -0.10:
+        insights.append(f"📉 {symbol}: Underperforming with {total_return:.1%} negative returns")
+    
+    return insights
 
 def create_risk_return_scatter(summary):
     """Create interactive risk vs return scatter plot"""
@@ -347,7 +397,7 @@ def create_correlation_heatmap(filtered_df, selected_symbols):
         aspect='auto'
     )
     
-    fig.update_layout(
+   fig.update_layout(
         title={
             'text': "Stock Correlation Matrix",
             'x': 0.5,
@@ -360,7 +410,6 @@ def create_correlation_heatmap(filtered_df, selected_symbols):
     
     return fig
 
-# Main App
 def main():
     create_header()
     
@@ -378,6 +427,13 @@ def main():
         
         st.markdown("---")
         st.markdown("### 📊 Analysis Settings")
+        
+        # AI Status indicator
+        ai_status = load_ai_models()
+        if ai_status["status"] == "loaded":
+            st.success("🤖 AI Models Active")
+        else:
+            st.warning("🤖 AI Models Loading...")
     
     # Load and validate data
     try:
@@ -426,7 +482,7 @@ def main():
             f"{date_range.days} days"
         ), unsafe_allow_html=True)
     
-   # Stock Selection
+    # Stock Selection
     st.markdown('<div class="section-header"><span class="section-icon">🎯</span><h2>Stock Selection</h2></div>', unsafe_allow_html=True)
     
     unique_symbols = sorted(df['symbol'].unique())
@@ -536,6 +592,31 @@ def main():
                 f"{worst_return:.2%}",
                 "negative"
             ), unsafe_allow_html=True)
+    
+    # AI-Powered Insights Section
+    st.markdown('<div class="section-header"><span class="section-icon">🤖</span><h2>AI-Powered Insights</h2></div>', unsafe_allow_html=True)
+    
+    if not summary.empty:
+        # Show AI insights for top 5 performing stocks
+        top_stocks = summary.nlargest(5, 'total_return')
+        
+        for _, row in top_stocks.iterrows():
+            # Get AI insights
+            ai_insights = generate_ai_insights(row['symbol'], row)
+            # Get sophisticated rule-based insights
+            rule_insights = generate_sophisticated_insights(row['symbol'], row)
+            
+            # Combine insights
+            all_insights = ai_insights + rule_insights
+            
+            if all_insights:
+                st.subheader(f"📊 {row['symbol']} Analysis")
+                for insight in all_insights:
+                    if insight.startswith("🤖"):
+                        st.markdown(f'<div class="ai-insight">{insight}</div>', unsafe_allow_html=True)
+                    else:
+                        st.info(insight)
+                st.markdown("---")
     
     # Interactive Charts Section
     st.markdown('<div class="section-header"><span class="section-icon">📊</span><h2>Interactive Analytics</h2></div>', unsafe_allow_html=True)
