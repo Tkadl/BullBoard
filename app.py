@@ -892,7 +892,7 @@ def main():
     
     col1, col2, col3, col4 = st.columns(4)
     
-   with col1:
+with col1:
     create_metric_card("Stocks Analyzed", str(df['symbol'].nunique()), "Active Symbols", "🏢")
 
 with col2:
