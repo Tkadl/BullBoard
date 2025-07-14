@@ -385,7 +385,7 @@ def create_correlation_heatmap(filtered_df, selected_symbols):
     pivot_data = filtered_df.pivot(index='Date', columns='symbol', values='daily_return')
     pivot_data = pivot_data[selected_symbols].dropna()
     
-    if pivot_data.empty:
+   if pivot_data.empty:
         return None
     
     correlation_matrix = pivot_data.corr()
@@ -397,7 +397,7 @@ def create_correlation_heatmap(filtered_df, selected_symbols):
         aspect='auto'
     )
     
-   fig.update_layout(
+    fig.update_layout(
         title={
             'text': "Stock Correlation Matrix",
             'x': 0.5,
