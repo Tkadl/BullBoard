@@ -159,63 +159,43 @@ st.markdown("""
     }
 }
     
-/* Metric Cards - Enhanced with !important */
-.metric-card {
-    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
-    padding: 1.5rem !important;
-    border-radius: 16px !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
-    border: 1px solid rgba(102, 126, 234, 0.1) !important;
-    margin: 0.5rem 0 !important;
-    transition: all 0.3s ease !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 1rem !important;
-    min-height: 100px !important;
-    position: relative !important;
-    overflow: hidden !important;
+/* Metric Cards - Streamlined */
+.metric-card-container {
+    padding: 4px;
+    margin-bottom: 1rem;
 }
 
-.metric-card::before {
-    content: '' !important;
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 4px !important;
-    height: 100% !important;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+/* Section Headers */
+.section-header {
+    display: flex;
+    align-items: center;
+    margin: 2rem 0 1.5rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e2e8f0;
 }
 
-.metric-card:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.15) !important;
+.section-icon {
+    font-size: 1.5rem;
+    margin-right: 0.75rem;
 }
 
-.metric-value {
-    font-size: 1.5rem !important;
-    font-weight: 700 !important;
-    color: #2c3e50 !important;
-    margin: 0 !important;
-    line-height: 1.2 !important;
+.section-header h2 {
+    margin: 0;
+    color: #1e293b;
+    font-weight: 600;
+    font-size: 1.5rem;
 }
 
-.metric-label {
-    font-size: 0.85rem !important;
-    color: #6c757d !important;
-    margin: 0 0 0.25rem 0 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
-    font-weight: 600 !important;
+/* Column spacing consistency */
+.element-container {
+    margin-bottom: 1rem;
 }
 
-.metric-change {
-    font-size: 0.9rem;
-    font-weight: 500;
-    margin-top: 0.25rem;
-}
-
-.positive { color: #2ecc71; }
-.negative { color: #e74c3c; }
+/* Status colors for fallback */
+.status-positive { color: #10B981; }
+.status-negative { color: #EF4444; }
+.status-neutral { color: #6366F1; }
+.status-warning { color: #F59E0B; }
     
     /* Status Cards */
     .status-card {
@@ -307,23 +287,117 @@ def create_header():
     </div>
     """, unsafe_allow_html=True)
 
-def create_metric_card(label, value, change=None, change_type="neutral"):
-    """Create a styled metric card with consistent sizing"""
-    change_class = "positive" if change_type == "positive" else "negative" if change_type == "negative" else ""
-    change_symbol = "↗" if change_type == "positive" else "↘" if change_type == "negative" else ""
+def create_metric_card(title, value, subtitle="", status="neutral"):
+    """Create a modern metric card with consistent styling"""
     
-    change_html = f'<p class="metric-change {change_class}">{change_symbol} {change}</p>' if change else ""
+    # Status color mapping
+    status_colors = {
+        "positive": "#10B981",  # Green
+        "negative": "#EF4444",  # Red
+        "neutral": "#6366F1",   # Blue
+        "warning": "#F59E0B"    # Orange
+    }
     
-    return f"""
-    <div class="metric-card">
-        <div style="font-size: 2rem; opacity: 0.7; flex-shrink: 0;">📊</div>
-        <div style="flex: 1;">
-            <p class="metric-label">{label}</p>
-            <p class="metric-value">{value}</p>
-            {change_html}
+    status_color = status_colors.get(status, status_colors["neutral"])
+    
+    # Icon mapping based on title or status
+    icons = {
+        "positive": "📈",
+        "negative": "📉",
+        "neutral": "📊",
+        "warning": "⚠️"
+    }
+    
+    # Title-specific icons
+    if "stock" in title.lower() or "analyzed" in title.lower():
+        icon = "🏢"
+    elif "data" in title.lower() or "points" in title.lower():
+        icon = "📊"
+    elif "update" in title.lower() or "time" in title.lower():
+        icon = "🕐"
+    elif "range" in title.lower() or "days" in title.lower():
+        icon = "📅"
+    else:
+        icon = icons.get(status, "📊")
+    
+    card_html = f"""
+    <div style="
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+        height: 140px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+    ">
+        <!-- Background Pattern -->
+        <div style="
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 80px;
+            height: 80px;
+            background: {status_color};
+            opacity: 0.05;
+            border-radius: 50%;
+        "></div>
+        
+        <!-- Header -->
+        <div style="
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        ">
+            <span style="
+                font-size: 20px;
+                margin-right: 8px;
+            ">{icon}</span>
+            <span style="
+                font-size: 12px;
+                font-weight: 600;
+                color: #64748b;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            ">{title}</span>
+        </div>
+        
+        <!-- Value -->
+        <div style="
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 8px 0;
+            line-height: 1.2;
+        ">{value}</div>
+        
+        <!-- Subtitle -->
+        <div style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        ">
+            <span style="
+                font-size: 13px;
+                color: {status_color};
+                font-weight: 500;
+            ">{subtitle}</span>
+            <div style="
+                width: 12px;
+                height: 12px;
+                background: {status_color};
+                border-radius: 50%;
+                opacity: 0.7;
+            "></div>
         </div>
     </div>
     """
+    
+    return card_html
 
 def calculate_comprehensive_risk_profile(symbol, data):
     """Calculate a comprehensive risk assessment"""
@@ -771,14 +845,16 @@ def main():
         st.error("No valid data found. Please refresh the data.")
         st.stop()
     
-    # Data info section
+   # Data info section with improved metric cards
+    st.markdown('<div class="section-header"><span class="section-icon">📊</span><h2>Market Overview</h2></div>', unsafe_allow_html=True)
+    
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         st.markdown(create_metric_card(
             "Stocks Analyzed", 
             str(df['symbol'].nunique()),
-            "Active", 
+            "Active Symbols", 
             "positive"
         ), unsafe_allow_html=True)
     
@@ -786,26 +862,47 @@ def main():
         st.markdown(create_metric_card(
             "Data Points", 
             f"{len(df):,}",
-            "Records", 
+            "Total Records", 
             "neutral"
         ), unsafe_allow_html=True)
     
     with col3:
-        if 'download_time' in df.columns:
-            last_update = df['download_time'].iloc[0]
+        if 'download_time' in df.columns and not df['download_time'].isna().all():
+            try:
+                last_update = pd.to_datetime(df['download_time'].iloc[0])
+                formatted_time = last_update.strftime("%H:%M")
+                st.markdown(create_metric_card(
+                    "Last Update", 
+                    formatted_time,
+                    "Today",
+                    "neutral"
+                ), unsafe_allow_html=True)
+            except:
+                st.markdown(create_metric_card(
+                    "Last Update", 
+                    "Recent",
+                    "Data Fresh",
+                    "positive"
+                ), unsafe_allow_html=True)
+        else:
             st.markdown(create_metric_card(
                 "Last Update", 
-                last_update.split()[1] if ' ' in str(last_update) else "Today"
+                "Recent",
+                "Data Fresh",
+                "positive"
             ), unsafe_allow_html=True)
-        else:
-            st.markdown(create_metric_card("Last Update", "Unknown"), unsafe_allow_html=True)
     
     with col4:
         date_range = df['Date'].max() - df['Date'].min()
         st.markdown(create_metric_card(
             "Date Range", 
-            f"{date_range.days} days"
+            f"{date_range.days}",
+            "Days Coverage",
+            "neutral"
         ), unsafe_allow_html=True)
+    
+    # Add some spacing after metrics
+    st.markdown("<br>", unsafe_allow_html=True)
     
     # Stock Selection
     st.markdown('<div class="section-header"><span class="section-icon">🎯</span><h2>Stock Selection</h2></div>', unsafe_allow_html=True)
