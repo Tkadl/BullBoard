@@ -438,7 +438,7 @@ def calculate_quality_metrics(symbol, data):
     }
 
 def generate_comprehensive_analysis(symbol, data, portfolio_context):
-    """Generate comprehensive, objective stock analysis"""
+    """Generate comprehensive, objective stock analysis - guaranteed insights"""
     insights = []
     
     # Get all analysis components
@@ -450,49 +450,64 @@ def generate_comprehensive_analysis(symbol, data, portfolio_context):
     total_return = data.get('total_return', 0)
     volatility = data.get('volatility_21', 0)
     sharpe_ratio = data.get('avg_sharpe_21', 0)
+    avg_return = data.get('avg_rolling_yield_21', 0)
     
-    # 1. PERFORMANCE SUMMARY
+    # 1. PERFORMANCE SUMMARY (Always included)
     if total_return > 0.20:
-        insights.append(f"🚀 **Strong Performance**: {symbol} generated {total_return:.1%} returns during the selected period")
+        insights.append(f"🚀 **Performance**: {symbol} generated strong {total_return:.1%} returns during the selected period")
     elif total_return > 0.05:
-        insights.append(f"📈 **Positive Performance**: {symbol} gained {total_return:.1%} over the analysis period")
+        insights.append(f"📈 **Performance**: {symbol} gained {total_return:.1%} over the analysis period")
     elif total_return > 0:
-        insights.append(f"📊 **Modest Gains**: {symbol} posted {total_return:.1%} returns")
+        insights.append(f"📊 **Performance**: {symbol} posted modest {total_return:.1%} returns")
     elif total_return > -0.10:
-        insights.append(f"📉 **Moderate Decline**: {symbol} fell {abs(total_return):.1%} during the period")
+        insights.append(f"📉 **Performance**: {symbol} declined {abs(total_return):.1%} during the period")
     else:
-        insights.append(f"⚠️ **Significant Decline**: {symbol} dropped {abs(total_return):.1%}")
+        insights.append(f"📉 **Performance**: {symbol} experienced significant decline of {abs(total_return):.1%}")
     
-    # 2. RISK ASSESSMENT
+    # 2. RISK ASSESSMENT (Always included)
     volatility_info = risk_profile['volatility']
-    insights.append(f"📊 **Risk Level**: {volatility_info['description']}")
+    insights.append(f"📊 **Risk Profile**: {volatility_info['description']}")
     
-    # 3. QUALITY METRICS
-    if quality_metrics['overall'] > 70:
-        insights.append(f"⭐ **High Quality**: Overall quality score of {quality_metrics['overall']}/100 - strong fundamentals")
-    elif quality_metrics['overall'] > 50:
-        insights.append(f"📊 **Moderate Quality**: Quality score of {quality_metrics['overall']}/100 - decent characteristics")
-    else:
-        insights.append(f"⚠️ **Below Average**: Quality score of {quality_metrics['overall']}/100 - several areas of concern")
-    
-    # 4. EFFICIENCY ANALYSIS
+    # 3. EFFICIENCY ANALYSIS (Always included)
     if sharpe_ratio > 1.2:
-        insights.append(f"🎯 **Excellent Efficiency**: Sharpe ratio of {sharpe_ratio:.2f} demonstrates strong risk-adjusted returns")
+        insights.append(f"⭐ **Efficiency**: Excellent risk-adjusted performance with Sharpe ratio of {sharpe_ratio:.2f}")
     elif sharpe_ratio > 0.8:
-        insights.append(f"✅ **Good Efficiency**: Sharpe ratio of {sharpe_ratio:.2f} shows reasonable risk compensation")
+        insights.append(f"✅ **Efficiency**: Good risk-adjusted performance with Sharpe ratio of {sharpe_ratio:.2f}")
     elif sharpe_ratio > 0.3:
-        insights.append(f"📊 **Fair Efficiency**: Sharpe ratio of {sharpe_ratio:.2f} indicates moderate risk-adjusted performance")
+        insights.append(f"📊 **Efficiency**: Moderate risk-adjusted performance with Sharpe ratio of {sharpe_ratio:.2f}")
     else:
-        insights.append(f"⚠️ **Poor Efficiency**: Sharpe ratio of {sharpe_ratio:.2f} suggests inadequate compensation for risk taken")
+        insights.append(f"⚠️ **Efficiency**: Below-average risk-adjusted performance with Sharpe ratio of {sharpe_ratio:.2f}")
     
-    # 5. ADD CONTEXT INSIGHTS
+    # 4. TREND ANALYSIS (Always included)
+    if avg_return > 0.001:
+        annualized_trend = avg_return * 252
+        insights.append(f"📈 **Trend**: Daily average return of {avg_return:.3%} projects to {annualized_trend:.1%} annualized")
+    elif avg_return < -0.001:
+        annualized_trend = avg_return * 252
+        insights.append(f"📉 **Trend**: Daily average decline of {abs(avg_return):.3%} projects to {abs(annualized_trend):.1%} annualized")
+    else:
+        insights.append(f"📊 **Trend**: Flat trend with minimal daily movement averaging {avg_return:.3%}")
+    
+    # 5. QUALITY METRICS (Always included)  
+    if quality_metrics['overall'] > 70:
+        insights.append(f"🏆 **Quality Score**: High rating of {quality_metrics['overall']}/100 across key metrics")
+    elif quality_metrics['overall'] > 50:
+        insights.append(f"📊 **Quality Score**: Moderate rating of {quality_metrics['overall']}/100 across key metrics")
+    else:
+        insights.append(f"📊 **Quality Score**: Below-average rating of {quality_metrics['overall']}/100 across key metrics")
+    
+    # 6. CONTEXT INSIGHTS (if available)
     insights.extend(performance_context)
     
-    # 6. OBJECTIVE SUMMARY
-    risk_level = "high" if volatility > 0.08 else "moderate" if volatility > 0.05 else "low"
-    return_level = "strong" if total_return > 0.15 else "moderate" if total_return > 0.05 else "weak" if total_return > 0 else "negative"
+    # 7. DRAWDOWN ANALYSIS (Always included)
+    drawdown_info = risk_profile['drawdown']
+    insights.append(f"📊 **Downside Risk**: {drawdown_info['description']}")
     
-    insights.append(f"📋 **Summary**: {symbol} exhibits {return_level} returns with {risk_level} risk characteristics over your selected timeframe")
+    # 8. FINAL FACTUAL SUMMARY (Always included)
+    risk_category = "high-risk" if volatility > 0.08 else "moderate-risk" if volatility > 0.05 else "low-risk"
+    return_category = "strong gains" if total_return > 0.15 else "moderate gains" if total_return > 0.05 else "modest gains" if total_return > 0 else "negative returns"
+    
+    insights.append(f"📋 **Profile**: {symbol} is a {risk_category} stock showing {return_category} over your selected timeframe")
     
     return insights
 
@@ -517,24 +532,32 @@ def generate_market_regime_insights(summary_data):
     return insights
 
 def generate_portfolio_optimization_insights(summary_data):
-    """Generate objective portfolio construction insights"""
+    """Generate objective portfolio construction insights - educational only"""
     insights = []
     
-    # Top performers by different metrics
+    # Top performers by different metrics (FACTUAL REPORTING)
     top_sharpe = summary_data.nlargest(3, 'avg_sharpe_21')['symbol'].tolist()
     top_return = summary_data.nlargest(3, 'total_return')['symbol'].tolist()
     low_risk = summary_data.nsmallest(3, 'avg_custom_risk_score')['symbol'].tolist()
     
-    insights.append(f"🎯 **Best Risk-Adjusted**: {', '.join(top_sharpe)} show highest Sharpe ratios in your selection")
-    insights.append(f"🚀 **Strongest Returns**: {', '.join(top_return)} delivered the highest absolute returns")
-    insights.append(f"🛡️ **Lowest Risk**: {', '.join(low_risk)} exhibit the most stable price behavior")
+    # CHANGED: More objective language
+    insights.append(f"📊 **Highest Risk-Adjusted Returns**: {', '.join(top_sharpe)} show the best Sharpe ratios in your selection")
+    insights.append(f"📈 **Top Absolute Returns**: {', '.join(top_return)} delivered the highest total returns")
+    insights.append(f"📉 **Most Stable**: {', '.join(low_risk)} exhibit the lowest volatility patterns")
     
-    # Risk concentration analysis
+    # Risk distribution analysis (FACTUAL)
     high_risk_count = (summary_data['avg_custom_risk_score'] > 0.08).sum()
     total_count = len(summary_data)
+      risk_percentage = (high_risk_count / total_count) * 100
+
+if high_risk_count / total_count > 0.5:
+    insights.append(f"⚠️ **Risk Concentration**: {risk_percentage:.0f}% of your selection ({high_risk_count}/{total_count} stocks) shows elevated risk")
+elif high_risk_count > 0:
+    insights.append(f"📊 **Risk Distribution**: {risk_percentage:.0f}% of your selection ({high_risk_count}/{total_count} stocks) shows elevated risk")
+else:
+    insights.append(f"🛡️ **Risk Distribution**: All selected stocks show moderate to low risk characteristics")
     
-    if high_risk_count / total_count > 0.5:
-        insights.append(f"⚠️ **Risk Concentration**: {high_risk_count}/{total_count} stocks show elevated risk - consider diversification")
+    # REMOVED: All "consider" and "suggest" language
     
     return insights
 
