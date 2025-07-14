@@ -304,145 +304,237 @@ def create_metric_card(label, value, change=None, change_type="neutral"):
     </div>
     """
 
-def generate_advanced_insights(symbol, data, market_context=None):
-    """Generate sophisticated rule-based insights with improved logic"""
+def calculate_comprehensive_risk_profile(symbol, data):
+    """Calculate a comprehensive risk assessment"""
+    risk_factors = {}
+    
+    # 1. Volatility Risk
+    volatility = data.get('volatility_21', 0)
+    if volatility > 0.08:
+        risk_factors['volatility'] = {'level': 'High', 'score': 3, 'description': f'Significant price swings ({volatility:.1%} volatility)'}
+    elif volatility > 0.05:
+        risk_factors['volatility'] = {'level': 'Moderate', 'score': 2, 'description': f'Moderate price fluctuations ({volatility:.1%} volatility)'}
+    else:
+        risk_factors['volatility'] = {'level': 'Low', 'score': 1, 'description': f'Relatively stable price movements ({volatility:.1%} volatility)'}
+    
+    # 2. Drawdown Risk
+    max_drawdown = data.get('avg_max_drawdown_63', 0)
+    if max_drawdown > 0.20:
+        risk_factors['drawdown'] = {'level': 'High', 'score': 3, 'description': f'Large peak-to-trough declines ({max_drawdown:.1%})'}
+    elif max_drawdown > 0.10:
+        risk_factors['drawdown'] = {'level': 'Moderate', 'score': 2, 'description': f'Moderate downside exposure ({max_drawdown:.1%})'}
+    else:
+        risk_factors['drawdown'] = {'level': 'Low', 'score': 1, 'description': f'Limited downside risk ({max_drawdown:.1%})'}
+    
+    # 3. Consistency Risk
+    sharpe = data.get('avg_sharpe_21', 0)
+    if sharpe < 0.5:
+        risk_factors['consistency'] = {'level': 'High', 'score': 3, 'description': f'Inconsistent return patterns (Sharpe: {sharpe:.2f})'}
+    elif sharpe < 1.0:
+        risk_factors['consistency'] = {'level': 'Moderate', 'score': 2, 'description': f'Moderately consistent returns (Sharpe: {sharpe:.2f})'}
+    else:
+        risk_factors['consistency'] = {'level': 'Low', 'score': 1, 'description': f'Consistent return generation (Sharpe: {sharpe:.2f})'}
+    
+    return risk_factors
+
+def analyze_performance_context(symbol, data, portfolio_context):
+    """Analyze performance in context of market and peers"""
     insights = []
+    
+    total_return = data.get('total_return', 0)
+    symbol_volatility = data.get('volatility_21', 0)
+    
+    # Market context
+    market_avg = portfolio_context.get('avg_return', 0)
+    market_volatility = portfolio_context.get('avg_volatility', 0.05)
+    
+    # Relative performance analysis
+    relative_performance = total_return - market_avg
+    if abs(relative_performance) > 0.05:  # 5% difference is significant
+        direction = "outperformed" if relative_performance > 0 else "underperformed"
+        insights.append(
+            f"📊 **Relative Performance**: {symbol} {direction} your selection average by {abs(relative_performance):.1%}"
+        )
+    
+    # Risk-adjusted comparison
+    if symbol_volatility < market_volatility * 0.8 and total_return > market_avg:
+        insights.append(
+            f"🎯 **Risk Efficiency**: {symbol} achieved above-average returns ({total_return:.1%}) with below-average risk ({symbol_volatility:.1%})"
+        )
+    elif symbol_volatility > market_volatility * 1.2 and total_return < market_avg:
+        insights.append(
+            f"⚠️ **Risk-Return Mismatch**: {symbol} shows higher risk ({symbol_volatility:.1%}) than average but lower returns ({total_return:.1%})"
+        )
+    
+    return insights
+
+def detect_market_regime(portfolio_data):
+    """Detect current market regime with confidence levels"""
+    positive_stocks = (portfolio_data['total_return'] > 0).sum()
+    total_stocks = len(portfolio_data)
+    avg_volatility = portfolio_data['volatility_21'].mean()
+    avg_return = portfolio_data['total_return'].mean()
+    
+    positive_ratio = positive_stocks / total_stocks
+    
+    if positive_ratio > 0.7 and avg_return > 0.1:
+        return {
+            'regime': 'Bull Market', 
+            'confidence': 'High', 
+            'description': f'{positive_ratio:.0%} of stocks positive with {avg_return:.1%} average return',
+            'characteristics': 'Broad-based gains with strong momentum'
+        }
+    elif positive_ratio < 0.4 and avg_return < 0:
+        return {
+            'regime': 'Bear Market', 
+            'confidence': 'High', 
+            'description': f'{positive_ratio:.0%} of stocks positive with {avg_return:.1%} average return',
+            'characteristics': 'Widespread declines across holdings'
+        }
+    elif avg_volatility > 0.08:
+        return {
+            'regime': 'High Volatility', 
+            'confidence': 'Medium', 
+            'description': f'Average volatility at {avg_volatility:.1%}',
+            'characteristics': 'Elevated uncertainty and price swings'
+        }
+    else:
+        return {
+            'regime': 'Neutral Market', 
+            'confidence': 'Medium', 
+            'description': f'{positive_ratio:.0%} positive stocks, {avg_volatility:.1%} average volatility',
+            'characteristics': 'Mixed signals with no clear directional bias'
+        }
+
+def calculate_quality_metrics(symbol, data):
+    """Calculate objective quality metrics (0-100 scale)"""
+    metrics = {}
+    
+    # Consistency Score (based on Sharpe ratio)
+    sharpe = data.get('avg_sharpe_21', 0)
+    consistency_score = min(100, max(0, (sharpe + 1) * 40))  # Normalize to 0-100
+    
+    # Efficiency Score (return per unit of risk)
+    risk_score = data.get('avg_custom_risk_score', 0.01)
+    total_return = data.get('total_return', 0)
+    if risk_score > 0:
+        efficiency_score = min(100, max(0, (total_return / risk_score) * 5))
+    else:
+        efficiency_score = 0
+    
+    # Growth Score (annualized return potential)
+    avg_return = data.get('avg_rolling_yield_21', 0)
+    annualized_return = avg_return * 252
+    growth_score = min(100, max(0, (annualized_return + 0.1) * 200))  # Normalize
+    
+    # Overall score (weighted average)
+    overall_score = (consistency_score * 0.4 + efficiency_score * 0.4 + growth_score * 0.2)
+    
+    return {
+        'consistency': round(consistency_score, 1),
+        'efficiency': round(efficiency_score, 1),
+        'growth': round(growth_score, 1),
+        'overall': round(overall_score, 1)
+    }
+
+def generate_comprehensive_analysis(symbol, data, portfolio_context):
+    """Generate comprehensive, objective stock analysis"""
+    insights = []
+    
+    # Get all analysis components
+    risk_profile = calculate_comprehensive_risk_profile(symbol, data)
+    performance_context = analyze_performance_context(symbol, data, portfolio_context)
+    quality_metrics = calculate_quality_metrics(symbol, data)
     
     # Extract key metrics
-    risk_score = data.get('avg_custom_risk_score', 0)
     total_return = data.get('total_return', 0)
-    sharpe_ratio = data.get('avg_sharpe_21', 0)
     volatility = data.get('volatility_21', 0)
-    avg_return = data.get('avg_rolling_yield_21', 0)
+    sharpe_ratio = data.get('avg_sharpe_21', 0)
     
-    # Determine overall stock profile first
-    is_high_risk = risk_score > 0.08 or volatility > 0.08
-    is_low_vol = volatility < 0.03
-    is_positive_return = total_return > 0.05
-    is_negative_return = total_return < -0.10
-    is_good_sharpe = sharpe_ratio > 1.0
-    is_poor_sharpe = sharpe_ratio < 0.5
+    # 1. PERFORMANCE SUMMARY
+    if total_return > 0.20:
+        insights.append(f"🚀 **Strong Performance**: {symbol} generated {total_return:.1%} returns during the selected period")
+    elif total_return > 0.05:
+        insights.append(f"📈 **Positive Performance**: {symbol} gained {total_return:.1%} over the analysis period")
+    elif total_return > 0:
+        insights.append(f"📊 **Modest Gains**: {symbol} posted {total_return:.1%} returns")
+    elif total_return > -0.10:
+        insights.append(f"📉 **Moderate Decline**: {symbol} fell {abs(total_return):.1%} during the period")
+    else:
+        insights.append(f"⚠️ **Significant Decline**: {symbol} dropped {abs(total_return):.1%}")
     
-    # 1. MOMENTUM ANALYSIS (Primary signal)
-    if total_return > 0.25:
-        insights.append(f"🚀 **Strong Momentum**: {symbol} exceptional performance with {total_return:.1%} returns - momentum leader")
-    elif total_return > 0.15:
-        insights.append(f"📈 **Positive Momentum**: {symbol} solid uptrend with {total_return:.1%} gains")
-    elif total_return < -0.20:
-        insights.append(f"📉 **Downtrend Alert**: {symbol} severe decline of {total_return:.1%} - high risk position")
-    elif total_return < -0.10:
-        insights.append(f"⚠️ **Underperforming**: {symbol} declining {total_return:.1%} - monitor for reversal signals")
+    # 2. RISK ASSESSMENT
+    volatility_info = risk_profile['volatility']
+    insights.append(f"📊 **Risk Level**: {volatility_info['description']}")
     
-    # 2. RISK-ADJUSTED PERFORMANCE (Quality assessment)
-    if is_good_sharpe and is_positive_return:
-        quality_level = "Exceptional" if sharpe_ratio > 1.5 else "Good"
-        insights.append(f"⭐ **{quality_level} Quality**: {symbol} delivers risk-adjusted returns (Sharpe: {sharpe_ratio:.2f})")
-    elif is_poor_sharpe and not is_low_vol:
-        insights.append(f"⚠️ **Efficiency Concern**: {symbol} poor risk-adjusted returns (Sharpe: {sharpe_ratio:.2f}) - risk may not be compensated")
+    # 3. QUALITY METRICS
+    if quality_metrics['overall'] > 70:
+        insights.append(f"⭐ **High Quality**: Overall quality score of {quality_metrics['overall']}/100 - strong fundamentals")
+    elif quality_metrics['overall'] > 50:
+        insights.append(f"📊 **Moderate Quality**: Quality score of {quality_metrics['overall']}/100 - decent characteristics")
+    else:
+        insights.append(f"⚠️ **Below Average**: Quality score of {quality_metrics['overall']}/100 - several areas of concern")
     
-    # 3. VOLATILITY & RISK ANALYSIS
-    if is_high_risk:
-        if is_good_sharpe:
-            insights.append(f"⚡ **High-Risk Reward**: {symbol} elevated volatility ({volatility:.1%}) but returns justify the risk")
-        else:
-            insights.append(f"🔥 **High Volatility**: {symbol} risky profile ({volatility:.1%}) - suitable only for aggressive investors")
-    elif is_low_vol and is_positive_return:
-        insights.append(f"🛡️ **Low-Volatility Winner**: {symbol} combines stability ({volatility:.1%} vol) with positive returns")
+    # 4. EFFICIENCY ANALYSIS
+    if sharpe_ratio > 1.2:
+        insights.append(f"🎯 **Excellent Efficiency**: Sharpe ratio of {sharpe_ratio:.2f} demonstrates strong risk-adjusted returns")
+    elif sharpe_ratio > 0.8:
+        insights.append(f"✅ **Good Efficiency**: Sharpe ratio of {sharpe_ratio:.2f} shows reasonable risk compensation")
+    elif sharpe_ratio > 0.3:
+        insights.append(f"📊 **Fair Efficiency**: Sharpe ratio of {sharpe_ratio:.2f} indicates moderate risk-adjusted performance")
+    else:
+        insights.append(f"⚠️ **Poor Efficiency**: Sharpe ratio of {sharpe_ratio:.2f} suggests inadequate compensation for risk taken")
     
-    # 4. PORTFOLIO ROLE (Only assign if not contradicted by other signals)
-    if is_low_vol and is_positive_return and is_good_sharpe:
-        insights.append(f"🎯 **Portfolio Core**: {symbol} ideal foundation stock - stability with growth")
-    elif is_low_vol and not is_negative_return and not is_poor_sharpe:
-        insights.append(f"⚖️ **Stability Provider**: {symbol} can help reduce portfolio volatility")
-    elif is_high_risk and is_good_sharpe:
-        insights.append(f"🎲 **Satellite Position**: {symbol} suitable for 5-10% allocation - high risk but compensated")
-    elif is_negative_return and is_high_risk:
-        insights.append(f"🔻 **Portfolio Drag**: {symbol} combining poor returns with high risk - consider reducing exposure")
+    # 5. ADD CONTEXT INSIGHTS
+    insights.extend(performance_context)
     
-    # 5. TREND STRENGTH (Only for positive trends)
-    if avg_return > 0.001 and total_return > 0:
-        annualized_projection = avg_return * 252
-        if annualized_projection > 0.20:
-            insights.append(f"📊 **Strong Trend**: {symbol} consistent daily gains ({avg_return:.3%}) project to {annualized_projection:.1%} annually")
+    # 6. OBJECTIVE SUMMARY
+    risk_level = "high" if volatility > 0.08 else "moderate" if volatility > 0.05 else "low"
+    return_level = "strong" if total_return > 0.15 else "moderate" if total_return > 0.05 else "weak" if total_return > 0 else "negative"
     
-    # 6. MARKET POSITIONING
-    if total_return > 0.15 and risk_score < 0.06:
-        insights.append(f"🏆 **Market Winner**: {symbol} outperforming with controlled risk - top quartile performer")
-    elif total_return < 0 and risk_score > 0.08:
-        insights.append(f"💔 **Double Negative**: {symbol} combines losses with high risk - priority review needed")
-    
-    # Ensure at least one insight if no major signals
-    if not insights:
-        if total_return > 0:
-            insights.append(f"📊 **Steady Performer**: {symbol} showing positive returns with moderate risk profile")
-        else:
-            insights.append(f"📊 **Mixed Signals**: {symbol} requires closer analysis - consider current market conditions")
+    insights.append(f"📋 **Summary**: {symbol} exhibits {return_level} returns with {risk_level} risk characteristics over your selected timeframe")
     
     return insights
-
-def get_risk_percentile(risk_score):
-    """Calculate risk percentile (mock function - you can enhance this)"""
-    # Simple percentile calculation - you can make this more sophisticated
-    if risk_score < 0.04:
-        return 25
-    elif risk_score < 0.07:
-        return 50
-    elif risk_score < 0.10:
-        return 75
-    else:
-        return 90
-
-def get_return_percentile(total_return):
-    """Calculate return percentile (mock function - you can enhance this)"""
-    if total_return > 0.20:
-        return 90
-    elif total_return > 0.10:
-        return 75
-    elif total_return > 0.05:
-        return 50
-    elif total_return > 0:
-        return 25
-    else:
-        return 10
 
 def generate_market_regime_insights(summary_data):
-    """Detect market regime based on portfolio data"""
+    """Generate market regime analysis"""
+    regime = detect_market_regime(summary_data)
     insights = []
     
-    avg_returns = summary_data['total_return'].mean()
-    avg_volatility = summary_data['volatility_21'].mean()
-    positive_stocks = (summary_data['total_return'] > 0).sum()
-    total_stocks = len(summary_data)
+    insights.append(f"🌐 **Market Regime**: {regime['regime']} detected with {regime['confidence'].lower()} confidence")
+    insights.append(f"📊 **Regime Details**: {regime['description']} - {regime['characteristics']}")
     
-    # Market regime detection
-    if positive_stocks / total_stocks > 0.7 and avg_returns > 0.10:
-        insights.append("🔥 **Bull Market Detected**: 70%+ of stocks showing positive returns - favorable environment for growth strategies")
-    elif positive_stocks / total_stocks < 0.4:
-        insights.append("🐻 **Bear Market Conditions**: Majority of stocks declining - focus on defensive positions and risk management")
-    elif avg_volatility > 0.08:
-        insights.append("🌪️ **High Volatility Regime**: Elevated market uncertainty - consider reducing position sizes")
+    # Regime-specific insights
+    if regime['regime'] == 'Bull Market':
+        insights.append("💡 **Market Context**: Favorable conditions for growth-oriented strategies")
+    elif regime['regime'] == 'Bear Market':
+        insights.append("💡 **Market Context**: Defensive positioning and risk management priority")
+    elif regime['regime'] == 'High Volatility':
+        insights.append("💡 **Market Context**: Consider reduced position sizes and increased monitoring")
     else:
-        insights.append("⚖️ **Balanced Market**: Mixed signals suggest neutral stance with selective opportunities")
+        insights.append("💡 **Market Context**: Mixed environment suggests selective, balanced approach")
     
     return insights
 
-def generate_portfolio_optimization_tips(summary_data):
-    """Generate portfolio construction insights"""
+def generate_portfolio_optimization_insights(summary_data):
+    """Generate objective portfolio construction insights"""
     insights = []
     
-    # Find best Sharpe ratios
-    top_sharpe = summary_data.nlargest(3, 'avg_sharpe_21')
-    low_correlation_candidates = summary_data[summary_data['volatility_21'] < summary_data['volatility_21'].median()]
+    # Top performers by different metrics
+    top_sharpe = summary_data.nlargest(3, 'avg_sharpe_21')['symbol'].tolist()
+    top_return = summary_data.nlargest(3, 'total_return')['symbol'].tolist()
+    low_risk = summary_data.nsmallest(3, 'avg_custom_risk_score')['symbol'].tolist()
     
-    insights.append(f"🎯 **Optimization Tip**: Consider overweighting {', '.join(top_sharpe['symbol'].tolist())} for risk-adjusted returns")
+    insights.append(f"🎯 **Best Risk-Adjusted**: {', '.join(top_sharpe)} show highest Sharpe ratios in your selection")
+    insights.append(f"🚀 **Strongest Returns**: {', '.join(top_return)} delivered the highest absolute returns")
+    insights.append(f"🛡️ **Lowest Risk**: {', '.join(low_risk)} exhibit the most stable price behavior")
     
-    if len(low_correlation_candidates) > 0:
-        insights.append(f"🔄 **Diversification Opportunity**: {', '.join(low_correlation_candidates['symbol'].head(3).tolist())} offer portfolio stabilization")
+    # Risk concentration analysis
+    high_risk_count = (summary_data['avg_custom_risk_score'] > 0.08).sum()
+    total_count = len(summary_data)
     
-    # Risk parity suggestion
-    high_risk_stocks = summary_data[summary_data['avg_custom_risk_score'] > summary_data['avg_custom_risk_score'].quantile(0.75)]
-    if len(high_risk_stocks) > 0:
-        insights.append(f"⚖️ **Risk Management**: Limit exposure to {', '.join(high_risk_stocks['symbol'].tolist())} or reduce position sizes")
+    if high_risk_count / total_count > 0.5:
+        insights.append(f"⚠️ **Risk Concentration**: {high_risk_count}/{total_count} stocks show elevated risk - consider diversification")
     
     return insights
 
