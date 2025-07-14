@@ -1,249 +1,440 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+import plotly.express as px
+from plotly.subplots import make_subplots
+import datetime
 
+# Page configuration
 st.set_page_config(
-    page_title="BullBoard - Risk/Yield Dashboard",
-    layout="wide"
+    page_title="BullBoard - Advanced Stock Analytics",
+    page_icon="🐂",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-st.title("🐂 BullBoard: Stock Risk & Yield Planner")
+# Custom CSS for modern styling
+st.markdown("""
+<style>
+    /* Import Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    /* Global Styles */
+    .main > div {
+        padding-top: 2rem;
+    }
+    
+    h1, h2, h3 {
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+    }
+    
+    /* Header Styling */
+    .main-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        color: white;
+        text-align: center;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+    }
+    
+    .main-header h1 {
+        margin: 0;
+        font-size: 2.5rem;
+        font-weight: 700;
+    }
+    
+    .main-header p {
+        margin: 0.5rem 0 0 0;
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+    
+    /* Metric Cards */
+    .metric-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border-left: 4px solid #667eea;
+        margin: 0.5rem 0;
+        transition: transform 0.2s ease;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+    
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+    }
+    
+    .metric-label {
+        font-size: 0.9rem;
+        color: #7f8c8d;
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .metric-change {
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-top: 0.25rem;
+    }
+    
+    .positive { color: #2ecc71; }
+    .negative { color: #e74c3c; }
+    
+    /* Status Cards */
+    .status-card {
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 0.5rem 0;
+        border-left: 4px solid;
+    }
+    
+    .status-success {
+        background: #d5f4e6;
+        border-color: #2ecc71;
+        color: #27ae60;
+    }
+    
+    .status-warning {
+        background: #fef9e7;
+        border-color: #f39c12;
+        color: #e67e22;
+    }
+    
+    .status-info {
+        background: #ebf3fd;
+        border-color: #3498db;
+        color: #2980b9;
+    }
+    
+    /* Action Button */
+    .action-button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .action-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    /* Section Headers */
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin: 2rem 0 1rem 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #ecf0f1;
+    }
+    
+    .section-icon {
+        font-size: 1.5rem;
+        margin-right: 0.5rem;
+    }
+    
+    /* Portfolio Summary */
+    .portfolio-summary {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin: 1rem 0;
+    }
+    
+    /* Risk Level Indicators */
+    .risk-low { border-left-color: #2ecc71 !important; }
+    .risk-medium { border-left-color: #f39c12 !important; }
+    .risk-high { border-left-color: #e74c3c !important; }
+    
+    /* Hide Streamlit Branding */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+</style>
+""", unsafe_allow_html=True)
 
-st.markdown(
-    """
-    <div style="background-color: #262730; border-radius: 10px; padding: 18px; margin-bottom:20px;">
-    <h3 style="margin-bottom:10px;color:#FAFAFA;">Welcome to BullBoard!</h3>
-    <p style="color:#FAFAFA;">Analyze stock risk and yield, get actionable insights, and visualize performance easily.</p>
-    </div>
-    """, unsafe_allow_html=True
-)
-
-# Button to run ETL pipeline
-if st.button("Run ETL Pipeline Now"):
-    with st.spinner("Running ETL pipeline, please wait..."):
-        import etl
-        etl.main()
-    st.success("ETL Pipeline complete! Reloading data...")
-    st.rerun()
-
-# SAFELY load CSV
-try:
-    df = pd.read_csv("latest_results.csv", parse_dates=["Date"])
-except Exception as e:
-    st.warning("No results file found or failed to read. Please run the ETL pipeline first.")
-    st.exception(e)
-    st.stop()
-
-if df.empty or ('symbol' not in df.columns):
-    st.warning("ETL produced empty or invalid data! Double check your ETL process and data source.")
-    st.stop()
-
-st.write(f"**Last analysis for {df['symbol'].nunique()} stocks.**")
-
-# --- Ticker Dropdown for Filtering ---
-unique_syms = sorted(df['symbol'].unique())
-selected_syms = st.multiselect(
-    "Select stocks for analysis",
-    unique_syms,
-    default=unique_syms[:5] if len(unique_syms) >= 5 else unique_syms
-)
-filtered_df = df[df['symbol'].isin(selected_syms)] if selected_syms else df
-
-# --- Date Range Picker ---
-if 'Date' in filtered_df.columns and not filtered_df.empty:
-    filtered_df['Date'] = pd.to_datetime(filtered_df['Date'])
-    min_date = filtered_df['Date'].min()
-    max_date = filtered_df['Date'].max()
-    date_range = st.date_input(
-        "Select date window for analysis",
-        value=(min_date, max_date),
-        min_value=min_date,
-        max_value=max_date,
-        key="date_range"
-    )
-    if isinstance(date_range, (tuple, list)) and len(date_range) == 2:
-        start_date, end_date = date_range
-        filtered_df = filtered_df[
-            (filtered_df['Date'] >= pd.to_datetime(start_date)) &
-            (filtered_df['Date'] <= pd.to_datetime(end_date))
-        ]
-else:
-    st.warning("No valid 'Date' column or no data after filtering.")
-    st.stop()
-
-# -- METRIC EXPLANATIONS TOOLTIP BOX --
-with st.expander("💡 Metric Explanations"):
+def create_header():
+    """Create the main header section"""
     st.markdown("""
-    **period_start/period_end**: Start and end dates for analysis window  
-    **period_days**: Number of analyzed dates per ticker  
-    **avg_close**: Average close price across window  
-    **avg_daily_return**: Average daily % return  
-    **total_return**: Overall percent change from first to last day in window  
-    **volatility_21**: Average 21-day rolling volatility (windowed std), annualized  
-    **avg_rolling_yield_21**: Mean 21-day rolling average daily yield  
-    **avg_sharpe_21**: Mean 21-day rolling Sharpe ratio (risk-adjusted yield)  
-    **avg_max_drawdown_63**: Mean 63-day max drawdown  
-    **avg_custom_risk_score**: Mean weighted risk score (see above)  
-    """)
+    <div class="main-header">
+        <h1>🐂 BullBoard</h1>
+        <p>Advanced Stock Risk & Yield Analytics Platform</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-st.caption("📊 All metrics below are aggregated per ticker for your selected period.")
+def create_metric_card(label, value, change=None, change_type="neutral"):
+    """Create a styled metric card"""
+    change_class = "positive" if change_type == "positive" else "negative" if change_type == "negative" else ""
+    change_symbol = "↗" if change_type == "positive" else "↘" if change_type == "negative" else ""
+    
+    change_html = f'<p class="metric-change {change_class}">{change_symbol} {change}</p>' if change else ""
+    
+    return f"""
+    <div class="metric-card">
+        <p class="metric-label">{label}</p>
+        <p class="metric-value">{value}</p>
+        {change_html}
+    </div>
+    """
 
-if filtered_df.empty:
-    st.warning("No data matches selected stocks/dates. Try selecting more stocks or changing the date range.")
-    st.stop()
+def create_status_card(message, status_type="info"):
+    """Create a status card"""
+    return f'<div class="status-card status-{status_type}">{message}</div>'
 
-# ----------- HEALTH REPORT PANEL ----------- #
-def health_report_panel(filtered_df, summary, selected_syms, min_date, max_date):
-    st.markdown("## 🩺 Data Health & Analytics Validity")
-    problems = []
-    with st.container():
-        # 1. ETL Download Time(s)
-        if "download_time" in filtered_df.columns:
-            last_dl = filtered_df["download_time"].max()
-            st.write(f"**ETL Last Run:** {last_dl}")
-        else:
-            st.write("**ETL last run time not available.**")
-
-        # 2. Ticker coverage check
-        missing_syms = [s for s in selected_syms if s not in filtered_df['symbol'].unique()]
-        if missing_syms:
-            st.warning(f"⚠️ No data for: {', '.join(missing_syms)}")
-            problems.append("Missing tickers")
-        else:
-            st.success("✅ All selected tickers present in data.")
-
-        # 3. Date coverage check
-        health_msgs = []
-        for sx in selected_syms:
-            symbol_dates = filtered_df[filtered_df['symbol'] == sx]['Date']
-            if not symbol_dates.empty:
-                start, end = symbol_dates.min(), symbol_dates.max()
-                cov_warn = ""
-                # Allow 1 day slippage (e.g. market holidays)
-                if (min_date is not None and (start > min_date + pd.Timedelta(days=1))) or \
-                   (max_date is not None and (end < max_date - pd.Timedelta(days=1))):
-                    cov_warn = "Incomplete"
-                if cov_warn:
-                    health_msgs.append(f"⚠️ {sx} data from {start.date()} to {end.date()}")
-            else:
-                health_msgs.append(f"⚠️ {sx} has no data in this window.")
-        if not health_msgs:
-            st.success("✅ All symbols have full date coverage.")
-        else:
-            for msg in health_msgs:
-                st.info(msg)
-            problems.append("Incomplete date coverage")
-
-        # 4. NaN/empty columns
-        if summary is not None and not summary.empty:
-            missing_cols = summary.isnull().any()
-            nan_cols = missing_cols[missing_cols].index.tolist()
-            if nan_cols:
-                st.warning(f"⚠️ Columns with missing values: {', '.join(nan_cols)}")
-                problems.append("NaNs in summary stats")
-            else:
-                st.success("✅ No missing values in summary table.")
-
-        # 5. No filtered data at all
-        if filtered_df.empty:
-            st.error("❌ No data after filtering. Check your selection or ETL.")
-
-        # Extra tip for hygiene!
-        if not problems:
-            st.info("✔️ No issues detected. Your analytics passed all health checks!")
-
-# ----------- SUMMARY: AGGREGATED BY TICKER ----------- #
-summary = (
-    filtered_df
-    .groupby("symbol")
-    .agg(
-        period_start = ("Date", "min"),
-        period_end = ("Date", "max"),
-        period_days = ("Date", "count"),
-        avg_close = ("Close", "mean"),
-        avg_daily_return = ("daily_return", "mean"),
-        total_return = ("Close", lambda x: (x.iloc[-1] / x.iloc[0]) - 1 if len(x) > 1 and x.iloc[0] != 0 else np.nan),
-        volatility_21 = ("volatility_21", "mean"),
-        avg_rolling_yield_21 = ("rolling_yield_21", "mean"),
-        avg_sharpe_21 = ("sharpe_21", "mean"),
-        avg_max_drawdown_63 = ("max_drawdown_63", "mean"),
-        avg_custom_risk_score = ("custom_risk_score", "mean"),
+def create_risk_return_scatter(summary):
+    """Create interactive risk vs return scatter plot"""
+    fig = px.scatter(
+        summary, 
+        x='avg_custom_risk_score', 
+        y='avg_rolling_yield_21',
+        size='avg_close',
+        color='avg_sharpe_21',
+        hover_name='symbol',
+        color_continuous_scale='RdYlGn',
+        title="Risk vs Return Analysis",
+        size_max=20
     )
-    .reset_index()
-)
-
-# ----------- HEALTH PANEL ----------- #
-health_report_panel(
-    filtered_df, summary, selected_syms,
-    min_date=min_date if 'min_date' in locals() else None,
-    max_date=max_date if 'max_date' in locals() else None
-)
-
-# ----------- PORTFOLIO-LEVEL AGGREGATED ANALYTICS ----------- #
-portfolio_returns = None
-if filtered_df['symbol'].nunique() > 1:
-    close_pivot = (
-        filtered_df.pivot(index="Date", columns="symbol", values="Close")
-        .sort_index()
-        .ffill()
-        .dropna(axis=0, how='any')
+    
+    fig.update_layout(
+        title={
+            'text': "Risk vs Return Analysis",
+            'x': 0.5,
+            'xanchor': 'center',
+            'font': {'size': 20, 'family': 'Inter'}
+        },
+        xaxis_title="Risk Score",
+        yaxis_title="Expected Return",
+        font=dict(family="Inter", size=12),
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        height=500
     )
-    if close_pivot.shape[0] > 1:
-        returns = close_pivot.pct_change().dropna(how='any')
-        port_daily = returns.mean(axis=1)
-        portfolio_returns = port_daily  # For potential future use
-        port_total_return = (close_pivot.iloc[-1].mean() / close_pivot.iloc[0].mean()) - 1
-        port_annualized_return = port_daily.mean() * 252
-        port_annualized_vol = port_daily.std() * np.sqrt(252)
-        port_sharpe = port_annualized_return / port_annualized_vol if port_annualized_vol != 0 else np.nan
-        port_max_drawdown = ((port_daily.cumsum() + 1).cummax() - (port_daily.cumsum() + 1)).max()
-        port_period = f"{close_pivot.index[0].date()} – {close_pivot.index[-1].date()}"
+    
+    fig.update_xaxes(gridcolor='lightgray', gridwidth=0.5)
+    fig.update_yaxes(gridcolor='lightgray', gridwidth=0.5)
+    
+    return fig
 
-        st.markdown("### Portfolio-level Analytics (Equal-Weighted)")
-        st.write({
-            "Period": port_period,
-            "Total return": f"{port_total_return:.2%}",
-            "Annualized return": f"{port_annualized_return:.2%}",
-            "Annualized volatility": f"{port_annualized_vol:.2%}",
-            "Sharpe ratio": f"{port_sharpe:.2f}",
-            "Max drawdown": f"{port_max_drawdown:.2%}"
-        })
+def create_performance_chart(filtered_df, selected_symbols):
+    """Create normalized performance comparison chart"""
+    if len(selected_symbols) == 0:
+        return None
+    
+    # Calculate normalized performance
+    perf_data = []
+    for symbol in selected_symbols:
+        symbol_data = filtered_df[filtered_df['symbol'] == symbol].sort_values('Date')
+        if not symbol_data.empty:
+            symbol_data = symbol_data.copy()
+            symbol_data['normalized'] = symbol_data['Close'] / symbol_data['Close'].iloc[0] * 100
+            perf_data.append(symbol_data[['Date', 'normalized', 'symbol']])
+    
+    if not perf_data:
+        return None
+    
+    combined_data = pd.concat(perf_data)
+    
+    fig = px.line(
+        combined_data,
+        x='Date',
+        y='normalized',
+        color='symbol',
+        title="Normalized Performance Comparison (Base 100)",
+        color_discrete_sequence=px.colors.qualitative.Set1
+    )
+    
+    fig.update_layout(
+        title={
+            'text': "Normalized Performance Comparison (Base 100)",
+            'x': 0.5,
+            'xanchor': 'center',
+            'font': {'size': 20, 'family': 'Inter'}
+        },
+        xaxis_title="Date",
+        yaxis_title="Normalized Price",
+        font=dict(family="Inter", size=12),
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        height=400,
+        hovermode='x unified'
+    )
+    
+    fig.update_xaxes(gridcolor='lightgray', gridwidth=0.5)
+    fig.update_yaxes(gridcolor='lightgray', gridwidth=0.5)
+    
+    return fig
 
-        st.line_chart((port_daily.cumsum() + 1), use_container_width=True)
-    else:
-        st.info("Not enough overlapping data to compute portfolio analytics.")
-else:
-    st.info("Select at least two stocks to see portfolio-level analytics.")
+def create_portfolio_metrics_chart(summary):
+    """Create portfolio metrics comparison chart"""
+    metrics = ['volatility_21', 'avg_rolling_yield_21', 'avg_sharpe_21']
+    metric_names = ['Volatility', 'Expected Return', 'Sharpe Ratio']
+    
+    fig = make_subplots(
+        rows=1, cols=3,
+        subplot_titles=metric_names,
+        specs=[[{"secondary_y": False}, {"secondary_y": False}, {"secondary_y": False}]]
+    )
+    
+    colors = ['#e74c3c', '#2ecc71', '#3498db']
+    
+    for i, (metric, name, color) in enumerate(zip(metrics, metric_names, colors)):
+        top_5 = summary.nlargest(5, metric)
+        
+        fig.add_trace(
+            go.Bar(
+                x=top_5['symbol'],
+                y=top_5[metric],
+                name=name,
+                marker_color=color,
+                showlegend=False
+            ),
+            row=1, col=i+1
+        )
+    
+    fig.update_layout(
+        title={
+            'text': "Top 5 Stocks by Key Metrics",
+            'x': 0.5,
+            'xanchor': 'center',
+            'font': {'size': 20, 'family': 'Inter'}
+        },
+        font=dict(family="Inter", size=12),
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        height=400
+    )
+    
+    return fig
 
-# ----------- SUMMARY: AGGREGATED BY TICKER ----------- #
-st.subheader("Summary Table (Aggregated per Ticker for Selected Period)")
-st.dataframe(summary)
+def create_correlation_heatmap(filtered_df, selected_symbols):
+    """Create correlation heatmap for selected stocks"""
+    if len(selected_symbols) < 2:
+        return None
+    
+    # Pivot data to get returns for each stock
+    pivot_data = filtered_df.pivot(index='Date', columns='symbol', values='daily_return')
+    pivot_data = pivot_data[selected_symbols].dropna()
+    
+    if pivot_data.empty:
+        return None
+    
+    correlation_matrix = pivot_data.corr()
+    
+    fig = px.imshow(
+        correlation_matrix,
+        title="Stock Correlation Matrix",
+        color_continuous_scale='RdBu',
+        aspect='auto'
+    )
+    
+    fig.update_layout(
+        title={
+            'text': "Stock Correlation Matrix",
+            'x': 0.5,
+            'xanchor': 'center',
+            'font': {'size': 20, 'family': 'Inter'}
+        },
+        font=dict(family="Inter", size=12),
+        height=500
+    )
+    
+    return fig
 
-# Show Top N
-if not summary.empty:
-    N = st.number_input("Show top N stocks by risk/yield:",
-                        min_value=1,
-                        max_value=len(summary),
-                        value=min(10, len(summary)))
-    st.write("**Top by average risk score:**")
-    st.dataframe(summary.sort_values("avg_custom_risk_score", ascending=False).head(N)
-                 [["symbol", "avg_custom_risk_score", "avg_rolling_yield_21"]])
-
-    st.write("**Top by average rolling yield:**")
-    st.dataframe(summary.sort_values("avg_rolling_yield_21", ascending=False).head(N)
-                 [["symbol", "avg_rolling_yield_21", "avg_custom_risk_score"]])
-
-# Visualizations
-st.subheader("Visualize Aggregate Metrics Timeline or Compare Across Tickers")
-symbols = summary['symbol'].tolist()
-selected = st.multiselect("Select stocks to plot", symbols, default=symbols[:min(3, len(symbols))])
-if selected:
-    st.write("**Side-by-side bar plot of risk/yield metrics (Averages over period):**")
-    filtered = summary[summary['symbol'].isin(selected)]
-    for metric, label in [
-        ("avg_custom_risk_score", "Avg Risk"),
-        ("avg_rolling_yield_21", "Avg Yield"),
-        ("avg_sharpe_21", "Avg Sharpe"),
-    ]:
-        st.bar_chart(filtered.set_index("symbol")[[metric]].rename(columns={metric: label}))
+# Main App
+def main():
+    create_header()
+    
+    # Sidebar for controls
+    with st.sidebar:
+        st.markdown("### 🎛️ Controls")
+        
+        # ETL Pipeline Button
+        if st.button("🔄 Refresh Data", key="etl_button"):
+            with st.spinner("Fetching latest market data..."):
+                import etl
+                etl.main()
+            st.success("Data updated successfully!")
+            st.rerun()
+        
+        st.markdown("---")
+        st.markdown("### 📊 Analysis Settings")
+    
+    # Load and validate data
+    try:
+        df = pd.read_csv("latest_results.csv", parse_dates=["Date"])
+    except Exception as e:
+        st.error("Failed to load data. Please refresh the data first.")
+        st.stop()
+    
+    if df.empty or 'symbol' not in df.columns:
+        st.error("No valid data found. Please refresh the data.")
+        st.stop()
+    
+    # Data info section
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.markdown(create_metric_card(
+            "Stocks Analyzed", 
+            str(df['symbol'].nunique()),
+            "Active", 
+            "positive"
+        ), unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(create_metric_card(
+            "Data Points", 
+            f"{len(df):,}",
+            "Records", 
+            "neutral"
+        ), unsafe_allow_html=True)
+    
+    with col3:
+        if 'download_time' in df.columns:
+            last_update = df['download_time'].iloc[0]
+            st.markdown(create_metric_card(
+                "Last Update", 
+                last_update.split()[1] if ' ' in str(last_update) else "Today"
+            ), unsafe_allow_html=True)
+        else:
+            st.markdown(create_metric_card("Last Update", "Unknown"), unsafe_allow_html=True)
+    
+    with col4:
+        date_range = df['Date'].max() - df['Date'].min()
+        st.markdown(create_metric_card(
+            "Date Range", 
+            f"{date_range.days} days"
+        ), unsafe_allow_html=True)
+    
+    # Stock Selection
+    st.markdown('<div class="section-header"><span class="section-icon">🎯</span><h2>Stock Selection</h2></div>', unsafe_allow_html=True)
+    
+    unique_symbols = sorted(df['symbol'].unique())
+    
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        selected_symbols = st.multiselect(
+            "Choose stocks to analyze",
+            unique_symbols,
+            default=unique_symbols[:8] if len(unique_symbols) >= 8 else unique_symbols,
+            help="Select stocks for detailed analysis and comparison"
