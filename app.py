@@ -479,7 +479,7 @@ def main():
         st.markdown("---")
         st.markdown("### 📊 Analysis Settings")
         
-  st.success("🧠 Advanced Rule-Based Analytics Active")
+        st.success("🧠 Advanced Rule-Based Analytics Active")
         st.info("💡 Sophisticated insights without AI dependencies")
     
     # Load and validate data
