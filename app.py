@@ -980,8 +980,8 @@ def main():
         )
         .reset_index()
     )
-    
- # Portfolio Overview
+
+     # Portfolio Overview
 if len(selected_symbols) > 1:
     st.markdown('<div class="section-header"><span class="section-icon">💼</span><h2>Portfolio Overview</h2></div>', unsafe_allow_html=True)
     
