@@ -159,45 +159,63 @@ st.markdown("""
     }
 }
     
-    /* Metric Cards */
-    .metric-card {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        border-left: 4px solid #667eea;
-        margin: 0.5rem 0;
-        transition: transform 0.2s ease;
-    }
-    
-    .metric-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-    }
-    
-    .metric-value {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #2c3e50;
-        margin: 0;
-    }
-    
-    .metric-label {
-        font-size: 0.9rem;
-        color: #7f8c8d;
-        margin: 0;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .metric-change {
-        font-size: 0.9rem;
-        font-weight: 500;
-        margin-top: 0.25rem;
-    }
-    
-    .positive { color: #2ecc71; }
-    .negative { color: #e74c3c; }
+   /* Metric Cards - Enhanced */
+.metric-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    margin: 0.5rem 0;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-height: 100px;
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.15);
+}
+
+.metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.metric-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin: 0 0 0.25rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.metric-change {
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-top: 0.25rem;
+}
+
+.positive { color: #2ecc71; }
+.negative { color: #e74c3c; }
     
     /* Status Cards */
     .status-card {
@@ -290,7 +308,7 @@ def create_header():
     """, unsafe_allow_html=True)
 
 def create_metric_card(label, value, change=None, change_type="neutral"):
-    """Create a styled metric card"""
+    """Create a styled metric card with consistent sizing"""
     change_class = "positive" if change_type == "positive" else "negative" if change_type == "negative" else ""
     change_symbol = "↗" if change_type == "positive" else "↘" if change_type == "negative" else ""
     
@@ -298,9 +316,12 @@ def create_metric_card(label, value, change=None, change_type="neutral"):
     
     return f"""
     <div class="metric-card">
-        <p class="metric-label">{label}</p>
-        <p class="metric-value">{value}</p>
-        {change_html}
+        <div style="font-size: 2rem; opacity: 0.7; flex-shrink: 0;">📊</div>
+        <div style="flex: 1;">
+            <p class="metric-label">{label}</p>
+            <p class="metric-value">{value}</p>
+            {change_html}
+        </div>
     </div>
     """
 
