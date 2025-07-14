@@ -437,7 +437,7 @@ def main():
             "Choose stocks to analyze",
             unique_symbols,
             default=unique_symbols[:8] if len(unique_symbols) >= 8 else unique_symbols,
-            help
+            help,
 help="Select stocks for detailed analysis and comparison"
         )
     
