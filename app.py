@@ -851,7 +851,7 @@ def main():
         .reset_index()
     )
     
-    # Portfolio Overview
+  # Portfolio Overview
     if len(selected_symbols) > 1:
         st.markdown('<div class="section-header"><span class="section-icon">💼</span><h2>Portfolio Overview</h2></div>', unsafe_allow_html=True)
         
@@ -878,7 +878,26 @@ def main():
                 "Risk Level",
                 "neutral"
             ), unsafe_allow_html=True)
-           # Individual stock analysis for ALL selected stocks
+        
+        with col3:
+            best_return = summary.loc[summary['symbol'] == best_performer, 'total_return'].iloc[0]
+            st.markdown(create_metric_card(
+                "Best Performer",
+                best_performer,
+                f"{best_return:.2%}",
+                "positive"
+            ), unsafe_allow_html=True)
+        
+        with col4:
+            worst_return = summary.loc[summary['symbol'] == worst_performer, 'total_return'].iloc[0]
+            st.markdown(create_metric_card(
+                "Worst Performer",
+                worst_performer,
+                f"{worst_return:.2%}",
+                "negative"
+            ), unsafe_allow_html=True)
+
+    # Individual stock analysis for ALL selected stocks
     st.subheader("🔍 Individual Stock Analysis")
     st.markdown("*Comprehensive analysis for all your selected stocks*")
     
@@ -912,24 +931,7 @@ def main():
             with st.expander(f"📊 {row['symbol']} - {performance_indicator} ({return_pct:.1%})"):
                 for insight in comprehensive_insights:
                     st.markdown(insight)
-        with col3:
-            best_return = summary.loc[summary['symbol'] == best_performer, 'total_return'].iloc[0]
-            st.markdown(create_metric_card(
-                "Best Performer",
-                best_performer,
-                f"{best_return:.2%}",
-                "positive"
-            ), unsafe_allow_html=True)
-        
-        with col4:
-            worst_return = summary.loc[summary['symbol'] == worst_performer, 'total_return'].iloc[0]
-            st.markdown(create_metric_card(
-                "Worst Performer",
-                worst_performer,
-                f"{worst_return:.2%}",
-                "negative"
-            ), unsafe_allow_html=True)
-    
+                    
 # Advanced Analytics Section
     st.markdown('<div class="section-header"><span class="section-icon">🧠</span><h2>Advanced Market Intelligence</h2></div>', unsafe_allow_html=True)
     
