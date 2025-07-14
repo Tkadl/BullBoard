@@ -892,26 +892,26 @@ def main():
     
     col1, col2, col3, col4 = st.columns(4)
     
-with col1:
-    create_metric_card("Stocks Analyzed", str(df['symbol'].nunique()), "Active Symbols", "🏢")
-
-with col2:
-    create_metric_card("Data Points", f"{len(df):,}", "Total Records", "📊")
-
-with col3:
-    if 'download_time' in df.columns and not df['download_time'].isna().all():
-        try:
-            last_update = pd.to_datetime(df['download_time'].iloc[0])
-            formatted_time = last_update.strftime("%H:%M")
-            create_metric_card("Last Update", formatted_time, "Today", "🕐")
-        except:
+    with col1:
+        create_metric_card("Stocks Analyzed", str(df['symbol'].nunique()), "Active Symbols", "🏢")
+    
+    with col2:
+        create_metric_card("Data Points", f"{len(df):,}", "Total Records", "📊")
+    
+    with col3:
+        if 'download_time' in df.columns and not df['download_time'].isna().all():
+            try:
+                last_update = pd.to_datetime(df['download_time'].iloc[0])
+                formatted_time = last_update.strftime("%H:%M")
+                create_metric_card("Last Update", formatted_time, "Today", "🕐")
+            except:
+                create_metric_card("Last Update", "Recent", "Data Fresh", "🕐")
+        else:
             create_metric_card("Last Update", "Recent", "Data Fresh", "🕐")
-    else:
-        create_metric_card("Last Update", "Recent", "Data Fresh", "🕐")
-
-with col4:
-    date_range = df['Date'].max() - df['Date'].min()
-    create_metric_card("Date Range", f"{date_range.days}", "Days Coverage", "📅")
+    
+    with col4:
+        date_range = df['Date'].max() - df['Date'].min()
+        create_metric_card("Date Range", f"{date_range.days}", "Days Coverage", "📅")
     
     # Add some spacing after metrics
     st.markdown("<br>", unsafe_allow_html=True)
