@@ -549,17 +549,15 @@ def generate_portfolio_optimization_insights(summary_data):
     high_risk_count = (summary_data['avg_custom_risk_score'] > 0.08).sum()
     total_count = len(summary_data)
     risk_percentage = (high_risk_count / total_count) * 100
-
-if high_risk_count / total_count > 0.5:
-    insights.append(f"⚠️ **Risk Concentration**: {risk_percentage:.0f}% of your selection ({high_risk_count}/{total_count} stocks) shows elevated risk")
-elif high_risk_count > 0:
-    insights.append(f"📊 **Risk Distribution**: {risk_percentage:.0f}% of your selection ({high_risk_count}/{total_count} stocks) shows elevated risk")
-else:
-    insights.append(f"🛡️ **Risk Distribution**: All selected stocks show moderate to low risk characteristics")
     
-    # REMOVED: All "consider" and "suggest" language
+    if high_risk_count / total_count > 0.5:
+        insights.append(f"⚠️ **Risk Concentration**: {risk_percentage:.0f}% of your selection ({high_risk_count}/{total_count} stocks) shows elevated risk")
+    elif high_risk_count > 0:
+        insights.append(f"📊 **Risk Distribution**: {risk_percentage:.0f}% of your selection ({high_risk_count}/{total_count} stocks) shows elevated risk")
+    else:
+        insights.append(f"🛡️ **Risk Distribution**: All selected stocks show moderate to low risk characteristics")
     
-return insights
+    return insights
 
 def create_risk_return_scatter(summary):
     """Create interactive risk vs return scatter plot"""
