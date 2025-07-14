@@ -438,3 +438,177 @@ def main():
             unique_symbols,
             default=unique_symbols[:8] if len(unique_symbols) >= 8 else unique_symbols,
             help
+help="Select stocks for detailed analysis and comparison"
+        )
+    
+    with col2:
+        if st.button("📈 Select All", key="select_all"):
+            selected_symbols = unique_symbols
+            st.rerun()
+    
+    # Filter data based on selection
+    filtered_df = df[df['symbol'].isin(selected_symbols)] if selected_symbols else df
+    
+    # Date Range Selection
+    if not filtered_df.empty:
+        min_date = filtered_df['Date'].min().date()
+        max_date = filtered_df['Date'].max().date()
+        
+        date_range = st.date_input(
+            "Select analysis period",
+            value=(min_date, max_date),
+            min_value=min_date,
+            max_value=max_date
+        )
+        
+        if isinstance(date_range, tuple) and len(date_range) == 2:
+            start_date, end_date = date_range
+            filtered_df = filtered_df[
+                (filtered_df['Date'] >= pd.to_datetime(start_date)) &
+                (filtered_df['Date'] <= pd.to_datetime(end_date))
+            ]
+    
+    if filtered_df.empty:
+        st.warning("No data available for selected stocks and date range.")
+        st.stop()
+    
+    # Generate summary statistics
+    summary = (
+        filtered_df
+        .groupby("symbol")
+        .agg(
+            period_start=("Date", "min"),
+            period_end=("Date", "max"),
+            period_days=("Date", "count"),
+            avg_close=("Close", "mean"),
+            avg_daily_return=("daily_return", "mean"),
+            total_return=("Close", lambda x: (x.iloc[-1] / x.iloc[0]) - 1 if len(x) > 1 and x.iloc[0] != 0 else np.nan),
+            volatility_21=("volatility_21", "mean"),
+            avg_rolling_yield_21=("rolling_yield_21", "mean"),
+            avg_sharpe_21=("sharpe_21", "mean"),
+            avg_max_drawdown_63=("max_drawdown_63", "mean"),
+            avg_custom_risk_score=("custom_risk_score", "mean"),
+        )
+        .reset_index()
+    )
+    
+    # Portfolio Overview
+    if len(selected_symbols) > 1:
+        st.markdown('<div class="section-header"><span class="section-icon">💼</span><h2>Portfolio Overview</h2></div>', unsafe_allow_html=True)
+        
+        # Portfolio metrics
+        portfolio_return = summary['total_return'].mean()
+        portfolio_risk = summary['avg_custom_risk_score'].mean()
+        best_performer = summary.loc[summary['total_return'].idxmax(), 'symbol']
+        worst_performer = summary.loc[summary['total_return'].idxmin(), 'symbol']
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.markdown(create_metric_card(
+                "Portfolio Return",
+                f"{portfolio_return:.2%}",
+                f"{portfolio_return:.2%}",
+                "positive" if portfolio_return > 0 else "negative"
+            ), unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown(create_metric_card(
+                "Average Risk Score",
+                f"{portfolio_risk:.3f}",
+                "Risk Level",
+                "neutral"
+            ), unsafe_allow_html=True)
+        
+        with col3:
+            best_return = summary.loc[summary['symbol'] == best_performer, 'total_return'].iloc[0]
+            st.markdown(create_metric_card(
+                "Best Performer",
+                best_performer,
+                f"{best_return:.2%}",
+                "positive"
+            ), unsafe_allow_html=True)
+        
+        with col4:
+            worst_return = summary.loc[summary['symbol'] == worst_performer, 'total_return'].iloc[0]
+            st.markdown(create_metric_card(
+                "Worst Performer",
+                worst_performer,
+                f"{worst_return:.2%}",
+                "negative"
+            ), unsafe_allow_html=True)
+    
+    # Interactive Charts Section
+    st.markdown('<div class="section-header"><span class="section-icon">📊</span><h2>Interactive Analytics</h2></div>', unsafe_allow_html=True)
+    
+    # Risk vs Return Scatter Plot
+    if not summary.empty:
+        fig = create_risk_return_scatter(summary)
+        st.plotly_chart(fig, use_container_width=True)
+    
+    # Performance Comparison Chart
+    if selected_symbols:
+        perf_fig = create_performance_chart(filtered_df, selected_symbols)
+        if perf_fig:
+            st.plotly_chart(perf_fig, use_container_width=True)
+    
+    # Metrics Comparison Chart
+    if not summary.empty:
+        metrics_fig = create_portfolio_metrics_chart(summary)
+        st.plotly_chart(metrics_fig, use_container_width=True)
+    
+    # Correlation Heatmap
+    if len(selected_symbols) > 1:
+        corr_fig = create_correlation_heatmap(filtered_df, selected_symbols)
+        if corr_fig:
+            st.plotly_chart(corr_fig, use_container_width=True)
+    
+    # Data Table Section
+    st.markdown('<div class="section-header"><span class="section-icon">📋</span><h2>Detailed Analysis</h2></div>', unsafe_allow_html=True)
+    
+    # Summary table with better formatting
+    if not summary.empty:
+        # Format the summary table for better display
+        display_summary = summary.copy()
+        display_summary['total_return'] = display_summary['total_return'].apply(lambda x: f"{x:.2%}" if pd.notna(x) else "N/A")
+        display_summary['avg_daily_return'] = display_summary['avg_daily_return'].apply(lambda x: f"{x:.4%}" if pd.notna(x) else "N/A")
+        display_summary['avg_rolling_yield_21'] = display_summary['avg_rolling_yield_21'].apply(lambda x: f"{x:.4%}" if pd.notna(x) else "N/A")
+        display_summary['volatility_21'] = display_summary['volatility_21'].apply(lambda x: f"{x:.4f}" if pd.notna(x) else "N/A")
+        display_summary['avg_sharpe_21'] = display_summary['avg_sharpe_21'].apply(lambda x: f"{x:.2f}" if pd.notna(x) else "N/A")
+        display_summary['avg_custom_risk_score'] = display_summary['avg_custom_risk_score'].apply(lambda x: f"{x:.4f}" if pd.notna(x) else "N/A")
+        display_summary['avg_close'] = display_summary['avg_close'].apply(lambda x: f"${x:.2f}" if pd.notna(x) else "N/A")
+        
+        st.dataframe(
+            display_summary,
+            use_container_width=True,
+            column_config={
+                "symbol": "Stock",
+                "total_return": "Total Return",
+                "avg_daily_return": "Avg Daily Return",
+                "avg_close": "Avg Price",
+                "volatility_21": "Volatility",
+                "avg_sharpe_21": "Sharpe Ratio",
+                "avg_custom_risk_score": "Risk Score"
+            }
+        )
+    
+    # Top performers section
+    if not summary.empty and len(summary) > 5:
+        st.markdown("### 🏆 Top Performers")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("**🚀 Highest Returns**")
+            top_returns = summary.nlargest(5, 'total_return')[['symbol', 'total_return']]
+            for _, row in top_returns.iterrows():
+                st.markdown(f"• **{row['symbol']}**: {row['total_return']:.2%}")
+        
+        with col2:
+            st.markdown("**⚡ Best Risk-Adjusted Returns**")
+            top_sharpe = summary.nlargest(5, 'avg_sharpe_21')[['symbol', 'avg_sharpe_21']]
+            for _, row in top_sharpe.iterrows():
+                st.markdown(f"• **{row['symbol']}**: {row['avg_sharpe_21']:.2f}")
+
+if __name__ == "__main__":
+    main()
