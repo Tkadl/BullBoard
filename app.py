@@ -5,9 +5,12 @@ import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 import datetime
-from transformers import pipeline
-import warnings
-warnings.filterwarnings("ignore")
+try:
+    from transformers import pipeline
+    TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    TRANSFORMERS_AVAILABLE = False
+    pipeline = None
 
 # Page configuration
 st.set_page_config(
@@ -179,6 +182,9 @@ def create_metric_card(label, value, change=None, change_type="neutral"):
 @st.cache_resource
 def load_ai_models():
     """Load AI models - runs on Streamlit's servers"""
+    if not TRANSFORMERS_AVAILABLE:
+        return {"status": "unavailable", "error": "Transformers library not available on this platform"}
+    
     try:
         sentiment_analyzer = pipeline(
             "sentiment-analysis",
