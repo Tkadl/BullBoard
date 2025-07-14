@@ -159,26 +159,33 @@ st.markdown("""
     }
 }
     
-/* Metric Cards - Fixed Version */
+/* Metric Cards - Enhanced Design */
 .metric-card {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 50%, #ffffff 100%);
     border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
     height: 140px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     margin: 8px 0;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
 }
 
 .metric-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 
+        0 12px 25px rgba(102, 126, 234, 0.15),
+        0 8px 10px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    border-color: rgba(102, 126, 234, 0.3);
 }
 
 .metric-card::before {
@@ -186,42 +193,115 @@ st.markdown("""
     position: absolute;
     top: 0;
     left: 0;
-    width: 4px;
+    width: 5px;
     height: 100%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    border-radius: 0 2px 2px 0;
+}
+
+.metric-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(102, 126, 234, 0.05) 0%, transparent 70%);
+    border-radius: 50%;
 }
 
 .metric-header {
     display: flex;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
 }
 
 .metric-icon {
-    font-size: 20px;
-    margin-right: 8px;
+    font-size: 18px;
+    margin-right: 10px;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
 }
 
 .metric-title {
-    font-size: 12px;
-    font-weight: 600;
-    color: #64748b !important;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.metric-value {
-    font-size: 28px !important;
+    font-size: 11px !important;
     font-weight: 700 !important;
-    color: #1e293b !important;
-    margin: 8px 0 !important;
+    color: #64748b !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
     line-height: 1.2 !important;
 }
 
+.metric-value {
+    font-size: 32px !important;
+    font-weight: 800 !important;
+    color: #1e293b !important;
+    margin: 8px 0 !important;
+    line-height: 1.1 !important;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
 .metric-subtitle {
-    font-size: 13px !important;
+    font-size: 12px !important;
     color: #667eea !important;
-    font-weight: 500 !important;
+    font-weight: 600 !important;
+    position: relative;
+    z-index: 1;
+    text-transform: capitalize;
+}
+
+/* Section Headers - Keep existing styles */
+.section-header {
+    display: flex;
+    align-items: center;
+    margin: 2rem 0 1.5rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.section-icon {
+    font-size: 1.5rem;
+    margin-right: 0.75rem;
+}
+
+.section-header h2 {
+    margin: 0 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 1.5rem !important;
+}
+
+/* Fix for dark theme text visibility */
+h1, h2, h3, h4, h5, h6 {
+    color: #ffffff !important;
+}
+
+.main .block-container {
+    color: #ffffff;
+}
+
+/* Additional refinements */
+.element-container {
+    margin-bottom: 0 !important;
+}
+
+/* Responsive adjustments for cards */
+@media (max-width: 768px) {
+    .metric-card {
+        height: 120px;
+        padding: 16px;
+    }
+    
+    .metric-value {
+        font-size: 24px !important;
+    }
+    
+    .metric-title {
+        font-size: 10px !important;
+    }
 }
 
 /* Section Headers - Fixed colors */
