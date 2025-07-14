@@ -982,101 +982,101 @@ def main():
     )
 
      # Portfolio Overview
-if len(selected_symbols) > 1:
-    st.markdown('<div class="section-header"><span class="section-icon">💼</span><h2>Portfolio Overview</h2></div>', unsafe_allow_html=True)
-    
-    # Portfolio metrics with enhanced calculations
-    portfolio_return = summary['total_return'].mean()
-    portfolio_risk = summary['avg_custom_risk_score'].mean()
-    best_performer = summary.loc[summary['total_return'].idxmax(), 'symbol']
-    worst_performer = summary.loc[summary['total_return'].idxmin(), 'symbol']
-    
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        # Dynamic return analysis with intelligent indicators
-        return_icon = "📈" if portfolio_return > 0 else "📉" if portfolio_return < 0 else "➡️"
-        return_magnitude = abs(portfolio_return)
+    if len(selected_symbols) > 1:
+        st.markdown('<div class="section-header"><span class="section-icon">💼</span><h2>Portfolio Overview</h2></div>', unsafe_allow_html=True)
         
-        if return_magnitude > 0.2:  # >20% return
-            return_descriptor = "Excellent" if portfolio_return > 0 else "Major Loss"
-        elif return_magnitude > 0.1:  # >10% return
-            return_descriptor = "Strong" if portfolio_return > 0 else "Significant Loss"
-        elif return_magnitude > 0.05:  # >5% return
-            return_descriptor = "Good" if portfolio_return > 0 else "Moderate Loss"
-        elif return_magnitude > 0:
-            return_descriptor = "Modest" if portfolio_return > 0 else "Small Loss"
-        else:
-            return_descriptor = "Flat"
+        # Portfolio metrics with enhanced calculations
+        portfolio_return = summary['total_return'].mean()
+        portfolio_risk = summary['avg_custom_risk_score'].mean()
+        best_performer = summary.loc[summary['total_return'].idxmax(), 'symbol']
+        worst_performer = summary.loc[summary['total_return'].idxmin(), 'symbol']
         
-        create_metric_card(
-            "Portfolio Return",
-            f"{portfolio_return:.2%}",
-            return_descriptor,
-            return_icon
-        )
-    
-    with col2:
-        # Intelligent risk assessment
-        if portfolio_risk > 0.15:
-            risk_icon = "🔴"
-            risk_level = "High Risk"
-        elif portfolio_risk > 0.08:
-            risk_icon = "🟡"
-            risk_level = "Moderate Risk"
-        elif portfolio_risk > 0.04:
-            risk_icon = "🟢"
-            risk_level = "Low Risk"
-        else:
-            risk_icon = "🟢"
-            risk_level = "Very Low Risk"
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            # Dynamic return analysis with intelligent indicators
+            return_icon = "📈" if portfolio_return > 0 else "📉" if portfolio_return < 0 else "➡️"
+            return_magnitude = abs(portfolio_return)
             
-        create_metric_card(
-            "Average Risk Score",
-            f"{portfolio_risk:.3f}",
-            risk_level,
-            risk_icon
-        )
-    
-    with col3:
-        # Best performer with contextual information
-        best_return = summary.loc[summary['symbol'] == best_performer, 'total_return'].iloc[0]
+            if return_magnitude > 0.2:  # >20% return
+                return_descriptor = "Excellent" if portfolio_return > 0 else "Major Loss"
+            elif return_magnitude > 0.1:  # >10% return
+                return_descriptor = "Strong" if portfolio_return > 0 else "Significant Loss"
+            elif return_magnitude > 0.05:  # >5% return
+                return_descriptor = "Good" if portfolio_return > 0 else "Moderate Loss"
+            elif return_magnitude > 0:
+                return_descriptor = "Modest" if portfolio_return > 0 else "Small Loss"
+            else:
+                return_descriptor = "Flat"
+            
+            create_metric_card(
+                "Portfolio Return",
+                f"{portfolio_return:.2%}",
+                return_descriptor,
+                return_icon
+            )
         
-        # Calculate performance context
-        performance_gap = best_return - portfolio_return
-        context = f"Outperforming by {performance_gap:.1%}" if performance_gap > 0 else "Market Leader"
+        with col2:
+            # Intelligent risk assessment
+            if portfolio_risk > 0.15:
+                risk_icon = "🔴"
+                risk_level = "High Risk"
+            elif portfolio_risk > 0.08:
+                risk_icon = "🟡"
+                risk_level = "Moderate Risk"
+            elif portfolio_risk > 0.04:
+                risk_icon = "🟢"
+                risk_level = "Low Risk"
+            else:
+                risk_icon = "🟢"
+                risk_level = "Very Low Risk"
+                
+            create_metric_card(
+                "Average Risk Score",
+                f"{portfolio_risk:.3f}",
+                risk_level,
+                risk_icon
+            )
         
-        create_metric_card(
-            "Best Performer",
-            best_performer,
-            f"{best_return:.2%} • {context[:15]}...",
-            "🏆"
-        )
-    
-    with col4:
-        # Worst performer with analytical context
-        worst_return = summary.loc[summary['symbol'] == worst_performer, 'total_return'].iloc[0]
+        with col3:
+            # Best performer with contextual information
+            best_return = summary.loc[summary['symbol'] == best_performer, 'total_return'].iloc[0]
+            
+            # Calculate performance context
+            performance_gap = best_return - portfolio_return
+            context = f"Outperforming by {performance_gap:.1%}" if performance_gap > 0 else "Market Leader"
+            
+            create_metric_card(
+                "Best Performer",
+                best_performer,
+                f"{best_return:.2%} • {context[:15]}...",
+                "🏆"
+            )
         
-        # Calculate underperformance context
-        underperformance_gap = portfolio_return - worst_return
-        worst_context = f"Lagging by {underperformance_gap:.1%}" if underperformance_gap > 0 else "Needs Attention"
+        with col4:
+            # Worst performer with analytical context
+            worst_return = summary.loc[summary['symbol'] == worst_performer, 'total_return'].iloc[0]
+            
+            # Calculate underperformance context
+            underperformance_gap = portfolio_return - worst_return
+            worst_context = f"Lagging by {underperformance_gap:.1%}" if underperformance_gap > 0 else "Needs Attention"
+            
+            create_metric_card(
+                "Worst Performer",
+                worst_performer,
+                f"{worst_return:.2%} • {worst_context[:15]}...",
+                "⚠️"
+            )
+        # Individual stock analysis for ALL selected stocks
+        st.subheader("🔍 Individual Stock Analysis")
+        st.markdown("*Comprehensive analysis for all your selected stocks*")
         
-        create_metric_card(
-            "Worst Performer",
-            worst_performer,
-            f"{worst_return:.2%} • {worst_context[:15]}...",
-            "⚠️"
-        )
-    # Individual stock analysis for ALL selected stocks
-    st.subheader("🔍 Individual Stock Analysis")
-    st.markdown("*Comprehensive analysis for all your selected stocks*")
-    
-    # Create portfolio context for all analyses
-    portfolio_context = {
-        'avg_return': summary['total_return'].mean(),
-        'avg_volatility': summary['volatility_21'].mean()
-    }
-    
+        # Create portfolio context for all analyses
+        portfolio_context = {
+            'avg_return': summary['total_return'].mean(),
+            'avg_volatility': summary['volatility_21'].mean()
+        }
+        
     # Analyze ALL selected stocks, sorted by return (best first, but show all)
     all_stocks = summary.sort_values('total_return', ascending=False)
     
