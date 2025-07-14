@@ -31,28 +31,133 @@ st.markdown("""
         font-weight: 600;
     }
     
-    /* Header Styling */
-    .main-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 2rem;
-        border-radius: 15px;
-        color: white;
+    /* Enhanced Header Styling */
+   .main-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    padding: 2.5rem 2rem;
+    border-radius: 20px;
+    color: white;
+    margin-bottom: 2rem;
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.main-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="20" cy="80" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    pointer-events: none;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo-icon {
+    font-size: 3.5rem;
+    filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+}
+
+.logo-text h1 {
+    margin: 0;
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(45deg, #ffffff, #f8f9ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+.tagline {
+    font-size: 1.2rem;
+    font-weight: 500;
+    opacity: 0.95;
+    margin-top: 0.25rem;
+}
+
+.value-props {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.prop-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.prop-item:hover {
+    transform: translateY(-3px);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.prop-icon {
+    font-size: 1.8rem;
+}
+
+.prop-text {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.header-subtitle {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 1rem;
+    opacity: 0.9;
+    font-weight: 400;
+    position: relative;
+    z-index: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: 1.5rem;
         text-align: center;
-        margin-bottom: 2rem;
-        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
     }
     
-    .main-header h1 {
-        margin: 0;
+    .value-props {
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .logo-text h1 {
         font-size: 2.5rem;
-        font-weight: 700;
     }
     
-    .main-header p {
-        margin: 0.5rem 0 0 0;
-        font-size: 1.1rem;
-        opacity: 0.9;
+    .tagline {
+        font-size: 1rem;
     }
+}
     
     /* Metric Cards */
     .metric-card {
@@ -152,11 +257,35 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def create_header():
+    """Create an enhanced, more appealing header section"""
     st.markdown("""
     <div class="main-header">
-        <h1>🐂 BullBoard</h1>
-        <p>Professional Stock Analysis Made Simple</p>
-        <p style="font-size: 0.9rem; opacity: 0.8;">Objective insights for informed decision-making</p>
+        <div class="header-content">
+            <div class="logo-section">
+                <span class="logo-icon">🐂</span>
+                <div class="logo-text">
+                    <h1>BullBoard</h1>
+                    <div class="tagline">Professional Stock Analysis Made Simple</div>
+                </div>
+            </div>
+            <div class="value-props">
+                <div class="prop-item">
+                    <span class="prop-icon">📊</span>
+                    <span class="prop-text">Objective Data</span>
+                </div>
+                <div class="prop-item">
+                    <span class="prop-icon">🎯</span>
+                    <span class="prop-text">Clear Insights</span>
+                </div>
+                <div class="prop-item">
+                    <span class="prop-icon">⚡</span>
+                    <span class="prop-text">Real-time Analysis</span>
+                </div>
+            </div>
+        </div>
+        <div class="header-subtitle">
+            Objective insights for informed decision-making • No advice, just facts
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
