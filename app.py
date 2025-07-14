@@ -879,39 +879,39 @@ def main():
                 "neutral"
             ), unsafe_allow_html=True)
            # Individual stock analysis for ALL selected stocks
-st.subheader("🔍 Individual Stock Analysis")
-st.markdown("*Comprehensive analysis for all your selected stocks*")
-
-# Create portfolio context for all analyses
-portfolio_context = {
-    'avg_return': summary['total_return'].mean(),
-    'avg_volatility': summary['volatility_21'].mean()
-}
-
-# Analyze ALL selected stocks, sorted by return (best first, but show all)
-all_stocks = summary.sort_values('total_return', ascending=False)
-
-for _, row in all_stocks.iterrows():
-    # Get comprehensive insights for EVERY stock
-    comprehensive_insights = generate_comprehensive_analysis(row['symbol'], row, portfolio_context)
+    st.subheader("🔍 Individual Stock Analysis")
+    st.markdown("*Comprehensive analysis for all your selected stocks*")
     
-    if comprehensive_insights:
-        # Add a visual indicator for performance level
-        return_pct = row['total_return']
-        if return_pct > 0.15:
-            performance_indicator = "🚀 Strong Performer"
-        elif return_pct > 0.05:
-            performance_indicator = "📈 Positive"
-        elif return_pct > 0:
-            performance_indicator = "📊 Modest Gains"
-        elif return_pct > -0.10:
-            performance_indicator = "📉 Declining"
-        else:
-            performance_indicator = "⚠️ Significant Decline"
+    # Create portfolio context for all analyses
+    portfolio_context = {
+        'avg_return': summary['total_return'].mean(),
+        'avg_volatility': summary['volatility_21'].mean()
+    }
+    
+    # Analyze ALL selected stocks, sorted by return (best first, but show all)
+    all_stocks = summary.sort_values('total_return', ascending=False)
+    
+    for _, row in all_stocks.iterrows():
+        # Get comprehensive insights for EVERY stock
+        comprehensive_insights = generate_comprehensive_analysis(row['symbol'], row, portfolio_context)
         
-        with st.expander(f"📊 {row['symbol']} - {performance_indicator} ({return_pct:.1%})"):
-            for insight in comprehensive_insights:
-                st.markdown(insight)
+        if comprehensive_insights:
+            # Add a visual indicator for performance level
+            return_pct = row['total_return']
+            if return_pct > 0.15:
+                performance_indicator = "🚀 Strong Performer"
+            elif return_pct > 0.05:
+                performance_indicator = "📈 Positive"
+            elif return_pct > 0:
+                performance_indicator = "📊 Modest Gains"
+            elif return_pct > -0.10:
+                performance_indicator = "📉 Declining"
+            else:
+                performance_indicator = "⚠️ Significant Decline"
+            
+            with st.expander(f"📊 {row['symbol']} - {performance_indicator} ({return_pct:.1%})"):
+                for insight in comprehensive_insights:
+                    st.markdown(insight)
         with col3:
             best_return = summary.loc[summary['symbol'] == best_performer, 'total_return'].iloc[0]
             st.markdown(create_metric_card(
