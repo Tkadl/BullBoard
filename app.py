@@ -175,81 +175,130 @@ def create_metric_card(label, value, change=None, change_type="neutral"):
     </div>
     """
 
-@st.cache_resource
-def load_ai_models():
-    """Load AI models - runs on Streamlit's servers"""
-    if not TRANSFORMERS_AVAILABLE:
-        return {"status": "unavailable", "error": "Transformers library not available on this platform"}
-    
-    try:
-        sentiment_analyzer = pipeline(
-            "sentiment-analysis",
-            model="cardiffnlp/twitter-roberta-base-sentiment-latest",
-            max_length=256,
-            truncation=True
-        )
-        return {"sentiment": sentiment_analyzer, "status": "loaded"}
-    except Exception as e:
-        return {"status": "failed", "error": str(e)}
-
-def generate_ai_insights(symbol, data):
-    """Generate AI insights for stocks"""
-    ai_models = load_ai_models()
+def generate_advanced_insights(symbol, data, market_context=None):
+    """Generate sophisticated rule-based insights that rival AI analysis"""
     insights = []
     
-    if ai_models["status"] == "loaded":
-        try:
-            # Create analysis text
-            performance = "strong" if data.get('total_return', 0) > 0.1 else "weak" if data.get('total_return', 0) < -0.05 else "moderate"
-            risk_level = "high" if data.get('avg_custom_risk_score', 0) > 0.08 else "low" if data.get('avg_custom_risk_score', 0) < 0.05 else "moderate"
-            
-            analysis_text = f"{symbol} demonstrates {performance} performance characteristics with {risk_level} risk profile in current market conditions"
-            
-            # Get AI sentiment
-            result = ai_models["sentiment"](analysis_text)[0]
-            
-            if result['label'] == 'LABEL_2' and result['score'] > 0.6:  # Positive
-                insights.append(f"🤖 AI Analysis: Bullish sentiment detected for {symbol} - favorable risk-reward profile")
-            elif result['label'] == 'LABEL_0' and result['score'] > 0.6:  # Negative  
-                insights.append(f"🤖 AI Analysis: Bearish sentiment for {symbol} - exercise caution")
-            else:
-                insights.append(f"🤖 AI Analysis: Neutral outlook for {symbol} - balanced risk assessment")
-                
-        except Exception as e:
-            insights.append(f"🤖 AI Analysis temporarily unavailable")
-    else:
-        insights.append(f"🤖 AI models loading... Using rule-based analysis")
-    
-    return insights
-
-def generate_sophisticated_insights(symbol, data):
-    """Generate sophisticated rule-based insights"""
-    insights = []
-    
-    # Risk-Return Analysis
+    # Extract key metrics
     risk_score = data.get('avg_custom_risk_score', 0)
     total_return = data.get('total_return', 0)
     sharpe_ratio = data.get('avg_sharpe_21', 0)
+    volatility = data.get('volatility_21', 0)
+    avg_return = data.get('avg_rolling_yield_21', 0)
     
-    # Sophisticated risk analysis
-    if risk_score < 0.04 and total_return > 0.15:
-        insights.append(f"💎 {symbol}: Rare low-risk, high-return opportunity detected ({total_return:.1%} return, {risk_score:.3f} risk score)")
-    elif risk_score > 0.10 and total_return > 0.20:
-        insights.append(f"⚡ {symbol}: High-risk, high-reward play - {total_return:.1%} returns with elevated volatility")
-    elif risk_score < 0.05:
-        insights.append(f"🛡️ {symbol}: Conservative choice with consistent performance profile")
+    # 1. MOMENTUM ANALYSIS
+    if total_return > 0.20:
+        momentum_strength = "Strong" if total_return > 0.30 else "Moderate"
+        insights.append(f"🚀 **Momentum Alert**: {symbol} shows {momentum_strength.lower()} bullish momentum with {total_return:.1%} returns")
+    elif total_return < -0.15:
+        insights.append(f"📉 **Risk Warning**: {symbol} showing bearish trend with {total_return:.1%} decline - monitor closely")
     
-    # Sharpe ratio insights
-    if sharpe_ratio > 1.5:
-        insights.append(f"⭐ {symbol}: Exceptional risk-adjusted returns (Sharpe: {sharpe_ratio:.2f}) - top-tier performer")
-    elif sharpe_ratio < 0.5:
-        insights.append(f"⚠️ {symbol}: Poor risk-adjusted returns - consider alternatives")
+    # 2. RISK-ADJUSTED PERFORMANCE ANALYSIS
+    if sharpe_ratio > 1.5 and total_return > 0.10:
+        insights.append(f"💎 **Alpha Generator**: {symbol} delivers exceptional risk-adjusted returns (Sharpe: {sharpe_ratio:.2f}) - potential portfolio cornerstone")
+    elif sharpe_ratio > 1.0:
+        insights.append(f"⭐ **Quality Pick**: {symbol} shows solid risk-adjusted performance - good addition to diversified portfolio")
+    elif sharpe_ratio < 0.3:
+        insights.append(f"⚠️ **Efficiency Warning**: {symbol} poor risk-adjusted returns - consider alternatives or position sizing")
     
-    # Performance categorization
-    if total_return > 0.25:
-        insights.append(f"🚀 {symbol}: Strong outperformer with {total_return:.1%} total returns")
-    elif total_return < -0.10:
-        insights.append(f"📉 {symbol}: Underperforming with {total_return:.1%} negative returns")
+    # 3. VOLATILITY REGIME ANALYSIS
+    if volatility < 0.02 and total_return > 0.05:
+        insights.append(f"🛡️ **Low-Vol Winner**: {symbol} rare combination of low volatility ({volatility:.1%}) with positive returns - ideal for conservative portfolios")
+    elif volatility > 0.08:
+        vol_category = "Extremely High" if volatility > 0.12 else "High"
+        if total_return > volatility * 2:  # Return compensates for risk
+            insights.append(f"⚡ **High-Risk Reward**: {symbol} {vol_category.lower()} volatility but returns justify the risk")
+        else:
+            insights.append(f"🔥 **Volatility Alert**: {symbol} {vol_category.lower()} volatility ({volatility:.1%}) - suitable only for risk-tolerant investors")
+    
+    # 4. MARKET POSITIONING ANALYSIS
+    risk_percentile = get_risk_percentile(risk_score)
+    return_percentile = get_return_percentile(total_return)
+    
+    if risk_percentile < 25 and return_percentile > 75:
+        insights.append(f"🏆 **Market Outperformer**: {symbol} in top quartile for returns while maintaining low risk profile")
+    elif risk_percentile > 75 and return_percentile < 25:
+        insights.append(f"💔 **Underperformer**: {symbol} high risk with poor returns - consider exit strategy")
+    
+    # 5. TREND STRENGTH ANALYSIS
+    if avg_return > 0.001:  # Positive daily average
+        annualized_projection = avg_return * 252
+        if annualized_projection > 0.15:
+            insights.append(f"📈 **Trend Strength**: {symbol} consistent daily gains averaging {avg_return:.3%} - projects to {annualized_projection:.1%} annually")
+    
+    # 6. PORTFOLIO ROLE RECOMMENDATION
+    if risk_score < 0.04 and total_return > 0.08:
+        insights.append(f"🎯 **Portfolio Core**: {symbol} ideal for portfolio foundation - low risk with steady returns")
+    elif risk_score > 0.10 and sharpe_ratio > 1.2:
+        insights.append(f"🎲 **Satellite Position**: {symbol} suitable for 5-10% portfolio allocation - high risk but compensated returns")
+    elif volatility < 0.03:
+        insights.append(f"⚖️ **Stability Anchor**: {symbol} can provide portfolio stability during market turbulence")
+    
+    return insights
+
+def get_risk_percentile(risk_score):
+    """Calculate risk percentile (mock function - you can enhance this)"""
+    # Simple percentile calculation - you can make this more sophisticated
+    if risk_score < 0.04:
+        return 25
+    elif risk_score < 0.07:
+        return 50
+    elif risk_score < 0.10:
+        return 75
+    else:
+        return 90
+
+def get_return_percentile(total_return):
+    """Calculate return percentile (mock function - you can enhance this)"""
+    if total_return > 0.20:
+        return 90
+    elif total_return > 0.10:
+        return 75
+    elif total_return > 0.05:
+        return 50
+    elif total_return > 0:
+        return 25
+    else:
+        return 10
+
+def generate_market_regime_insights(summary_data):
+    """Detect market regime based on portfolio data"""
+    insights = []
+    
+    avg_returns = summary_data['total_return'].mean()
+    avg_volatility = summary_data['volatility_21'].mean()
+    positive_stocks = (summary_data['total_return'] > 0).sum()
+    total_stocks = len(summary_data)
+    
+    # Market regime detection
+    if positive_stocks / total_stocks > 0.7 and avg_returns > 0.10:
+        insights.append("🔥 **Bull Market Detected**: 70%+ of stocks showing positive returns - favorable environment for growth strategies")
+    elif positive_stocks / total_stocks < 0.4:
+        insights.append("🐻 **Bear Market Conditions**: Majority of stocks declining - focus on defensive positions and risk management")
+    elif avg_volatility > 0.08:
+        insights.append("🌪️ **High Volatility Regime**: Elevated market uncertainty - consider reducing position sizes")
+    else:
+        insights.append("⚖️ **Balanced Market**: Mixed signals suggest neutral stance with selective opportunities")
+    
+    return insights
+
+def generate_portfolio_optimization_tips(summary_data):
+    """Generate portfolio construction insights"""
+    insights = []
+    
+    # Find best Sharpe ratios
+    top_sharpe = summary_data.nlargest(3, 'avg_sharpe_21')
+    low_correlation_candidates = summary_data[summary_data['volatility_21'] < summary_data['volatility_21'].median()]
+    
+    insights.append(f"🎯 **Optimization Tip**: Consider overweighting {', '.join(top_sharpe['symbol'].tolist())} for risk-adjusted returns")
+    
+    if len(low_correlation_candidates) > 0:
+        insights.append(f"🔄 **Diversification Opportunity**: {', '.join(low_correlation_candidates['symbol'].head(3).tolist())} offer portfolio stabilization")
+    
+    # Risk parity suggestion
+    high_risk_stocks = summary_data[summary_data['avg_custom_risk_score'] > summary_data['avg_custom_risk_score'].quantile(0.75)]
+    if len(high_risk_stocks) > 0:
+        insights.append(f"⚖️ **Risk Management**: Limit exposure to {', '.join(high_risk_stocks['symbol'].tolist())} or reduce position sizes")
     
     return insights
 
@@ -430,12 +479,8 @@ def main():
         st.markdown("---")
         st.markdown("### 📊 Analysis Settings")
         
-        # AI Status indicator
-        ai_status = load_ai_models()
-        if ai_status["status"] == "loaded":
-            st.success("🤖 AI Models Active")
-        else:
-            st.warning("🤖 AI Models Loading...")
+  st.success("🧠 Advanced Rule-Based Analytics Active")
+        st.info("💡 Sophisticated insights without AI dependencies")
     
     # Load and validate data
     try:
@@ -595,31 +640,38 @@ def main():
                 "negative"
             ), unsafe_allow_html=True)
     
-    # AI-Powered Insights Section
-    st.markdown('<div class="section-header"><span class="section-icon">🤖</span><h2>AI-Powered Insights</h2></div>', unsafe_allow_html=True)
+# Advanced Analytics Section
+    st.markdown('<div class="section-header"><span class="section-icon">🧠</span><h2>Advanced Market Intelligence</h2></div>', unsafe_allow_html=True)
     
     if not summary.empty:
-        # Show AI insights for top 5 performing stocks
+        # Market regime analysis
+        market_insights = generate_market_regime_insights(summary)
+        if market_insights:
+            st.subheader("📊 Market Regime Analysis")
+            for insight in market_insights:
+                st.info(insight)
+        
+        # Portfolio optimization tips
+        portfolio_tips = generate_portfolio_optimization_tips(summary)
+        if portfolio_tips:
+            st.subheader("🎯 Portfolio Optimization")
+            for tip in portfolio_tips:
+                st.success(tip)
+        
+        st.markdown("---")
+        
+        # Individual stock analysis for top performers
+        st.subheader("🔍 Individual Stock Analysis")
         top_stocks = summary.nlargest(5, 'total_return')
         
         for _, row in top_stocks.iterrows():
-            # Get AI insights
-            ai_insights = generate_ai_insights(row['symbol'], row)
-            # Get sophisticated rule-based insights
-            rule_insights = generate_sophisticated_insights(row['symbol'], row)
+            # Get advanced insights
+            advanced_insights = generate_advanced_insights(row['symbol'], row)
             
-            # Combine insights
-            all_insights = ai_insights + rule_insights
-            
-            if all_insights:
-                st.subheader(f"📊 {row['symbol']} Analysis")
-                for insight in all_insights:
-                    if insight.startswith("🤖"):
-                        st.markdown(f'<div class="ai-insight">{insight}</div>', unsafe_allow_html=True)
-                    else:
-                        st.info(insight)
-                st.markdown("---")
-    
+            if advanced_insights:
+                with st.expander(f"📊 {row['symbol']} - Advanced Analysis"):
+                    for insight in advanced_insights:
+                        st.markdown(insight)
     # Interactive Charts Section
     st.markdown('<div class="section-header"><span class="section-icon">📊</span><h2>Interactive Analytics</h2></div>', unsafe_allow_html=True)
     
