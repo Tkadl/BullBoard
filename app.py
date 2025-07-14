@@ -944,9 +944,9 @@ def main():
                 st.info(insight)
         
         # Portfolio optimization tips
-        portfolio_tips = generate_portfolio_optimization_tips(summary)
+        portfolio_tips = generate_portfolio_optimization_insights(summary)
         if portfolio_tips:
-            st.subheader("🎯 Portfolio Optimization")
+            st.subheader("🎯 Portfolio Composition Analysis")
             for tip in portfolio_tips:
                 st.success(tip)
         
