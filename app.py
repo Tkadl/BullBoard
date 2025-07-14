@@ -548,7 +548,7 @@ def generate_portfolio_optimization_insights(summary_data):
     # Risk distribution analysis (FACTUAL)
     high_risk_count = (summary_data['avg_custom_risk_score'] > 0.08).sum()
     total_count = len(summary_data)
-      risk_percentage = (high_risk_count / total_count) * 100
+    risk_percentage = (high_risk_count / total_count) * 100
 
 if high_risk_count / total_count > 0.5:
     insights.append(f"⚠️ **Risk Concentration**: {risk_percentage:.0f}% of your selection ({high_risk_count}/{total_count} stocks) shows elevated risk")
