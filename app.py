@@ -5,12 +5,8 @@ import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 import datetime
-try:
-    from transformers import pipeline
-    TRANSFORMERS_AVAILABLE = True
-except ImportError:
-    TRANSFORMERS_AVAILABLE = False
-    pipeline = None
+TRANSFORMERS_AVAILABLE = False
+pipeline = None
 
 # Page configuration
 st.set_page_config(
