@@ -159,13 +159,72 @@ st.markdown("""
     }
 }
     
-/* Metric Cards - Streamlined */
-.metric-card-container {
-    padding: 4px;
-    margin-bottom: 1rem;
+/* Metric Cards - Fixed Version */
+.metric-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin: 8px 0;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
-/* Section Headers */
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.metric-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.metric-icon {
+    font-size: 20px;
+    margin-right: 8px;
+}
+
+.metric-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.metric-value {
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    margin: 8px 0 !important;
+    line-height: 1.2 !important;
+}
+
+.metric-subtitle {
+    font-size: 13px !important;
+    color: #667eea !important;
+    font-weight: 500 !important;
+}
+
+/* Section Headers - Fixed colors */
 .section-header {
     display: flex;
     align-items: center;
@@ -180,22 +239,20 @@ st.markdown("""
 }
 
 .section-header h2 {
-    margin: 0;
-    color: #1e293b;
-    font-weight: 600;
-    font-size: 1.5rem;
+    margin: 0 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 1.5rem !important;
 }
 
-/* Column spacing consistency */
-.element-container {
-    margin-bottom: 1rem;
+/* Fix for dark theme text visibility */
+h1, h2, h3, h4, h5, h6 {
+    color: #ffffff !important;
 }
 
-/* Status colors for fallback */
-.status-positive { color: #10B981; }
-.status-negative { color: #EF4444; }
-.status-neutral { color: #6366F1; }
-.status-warning { color: #F59E0B; }
+.main .block-container {
+    color: #ffffff;
+}
     
     /* Status Cards */
     .status-card {
@@ -287,118 +344,20 @@ def create_header():
     </div>
     """, unsafe_allow_html=True)
 
-def create_metric_card(title, value, subtitle="", status="neutral"):
-    """Create a modern metric card with consistent styling"""
+def create_metric_card(title, value, subtitle="", icon="📊"):
+    """Create a metric card using Streamlit components with custom styling"""
     
-    # Status color mapping
-    status_colors = {
-        "positive": "#10B981",  # Green
-        "negative": "#EF4444",  # Red
-        "neutral": "#6366F1",   # Blue
-        "warning": "#F59E0B"    # Orange
-    }
-    
-    status_color = status_colors.get(status, status_colors["neutral"])
-    
-    # Icon mapping based on title or status
-    icons = {
-        "positive": "📈",
-        "negative": "📉",
-        "neutral": "📊",
-        "warning": "⚠️"
-    }
-    
-    # Title-specific icons
-    if "stock" in title.lower() or "analyzed" in title.lower():
-        icon = "🏢"
-    elif "data" in title.lower() or "points" in title.lower():
-        icon = "📊"
-    elif "update" in title.lower() or "time" in title.lower():
-        icon = "🕐"
-    elif "range" in title.lower() or "days" in title.lower():
-        icon = "📅"
-    else:
-        icon = icons.get(status, "📊")
-    
-    card_html = f"""
-    <div style="
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        border: 1px solid #e2e8f0;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        transition: all 0.3s ease;
-        height: 140px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        position: relative;
-        overflow: hidden;
-    ">
-        <!-- Background Pattern -->
-        <div style="
-            position: absolute;
-            top: -20px;
-            right: -20px;
-            width: 80px;
-            height: 80px;
-            background: {status_color};
-            opacity: 0.05;
-            border-radius: 50%;
-        "></div>
-        
-        <!-- Header -->
-        <div style="
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-        ">
-            <span style="
-                font-size: 20px;
-                margin-right: 8px;
-            ">{icon}</span>
-            <span style="
-                font-size: 12px;
-                font-weight: 600;
-                color: #64748b;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            ">{title}</span>
+    st.markdown(f"""
+    <div class="metric-card">
+        <div class="metric-header">
+            <span class="metric-icon">{icon}</span>
+            <span class="metric-title">{title}</span>
         </div>
-        
-        <!-- Value -->
-        <div style="
-            font-size: 28px;
-            font-weight: 700;
-            color: #1e293b;
-            margin: 8px 0;
-            line-height: 1.2;
-        ">{value}</div>
-        
-        <!-- Subtitle -->
-        <div style="
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        ">
-            <span style="
-                font-size: 13px;
-                color: {status_color};
-                font-weight: 500;
-            ">{subtitle}</span>
-            <div style="
-                width: 12px;
-                height: 12px;
-                background: {status_color};
-                border-radius: 50%;
-                opacity: 0.7;
-            "></div>
-        </div>
+        <div class="metric-value">{value}</div>
+        <div class="metric-subtitle">{subtitle}</div>
     </div>
-    """
-    
-    return card_html
-
+    """, unsafe_allow_html=True)
+        
 def calculate_comprehensive_risk_profile(symbol, data):
     """Calculate a comprehensive risk assessment"""
     risk_factors = {}
