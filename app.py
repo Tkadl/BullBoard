@@ -148,64 +148,15 @@ st.markdown("""
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
-
-    /* Customer-focused styling */
-.insight-card {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-left: 5px solid #28a745;
-    padding: 1.2rem;
-    margin: 0.8rem 0;
-    border-radius: 8px;
-    font-size: 1.05rem;
-    line-height: 1.5;
-}
-
-.warning-card {
-    background: linear-gradient(135deg, #fff3cd 0%, #fdeaa7 100%);
-    border-left: 5px solid #ffc107;
-    padding: 1.2rem;
-    margin: 0.8rem 0;
-    border-radius: 8px;
-}
-
-.risk-card {
-    background: linear-gradient(135deg, #f8d7da 0%, #f1aeb5 100%);
-    border-left: 5px solid #dc3545;
-    padding: 1.2rem;
-    margin: 0.8rem 0;
-    border-radius: 8px;
-}
-
-.recommendation-box {
-    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
-    border: 2px solid #17a2b8;
-    padding: 1.5rem;
-    border-radius: 12px;
-    margin: 1rem 0;
-}
-
-.simple-metric {
-    text-align: center;
-    padding: 1rem;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    margin: 0.5rem;
-}
-
-.grade-a { background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); }
-.grade-b { background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); }
-.grade-c { background: linear-gradient(135deg, #f8d7da 0%, #f1aeb5 100%); }
 </style>
 """, unsafe_allow_html=True)
 
 def create_header():
-    """Create the main header section focused on simplicity"""
+    """Create the main header section"""
     st.markdown("""
     <div class="main-header">
         <h1>🐂 BullBoard</h1>
-        <p>Smart Stock Analysis Made Simple</p>
-        <p style="font-size: 0.9rem; opacity: 0.8;">Professional insights in plain English - perfect for busy investors</p>
+        <p>Advanced Stock Risk & Yield Analytics Platform with AI Insights</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -735,16 +686,7 @@ def main():
             if advanced_insights:
                 with st.expander(f"📊 {row['symbol']} - Advanced Analysis"):
                     for insight in advanced_insights:
-                        # Determine card type based on content and apply CSS classes
-                        if any(word in insight.lower() for word in ['warning', 'concern', 'efficiency', 'poor']):
-                            # Warning card (yellow)
-                            st.markdown(f'<div class="warning-card">{insight}</div>', unsafe_allow_html=True)
-                        elif any(word in insight.lower() for word in ['alert', 'decline', 'risk', 'negative', 'avoid', 'drag']):
-                            # Risk card (red)
-                            st.markdown(f'<div class="risk-card">{insight}</div>', unsafe_allow_html=True)
-                        else:
-                            # Positive insight card (gray with green border)
-                            st.markdown(f'<div class="insight-card">{insight}</div>', unsafe_allow_html=True)
+                        st.markdown(insight)
     # Interactive Charts Section
     st.markdown('<div class="section-header"><span class="section-icon">📊</span><h2>Interactive Analytics</h2></div>', unsafe_allow_html=True)
     
@@ -819,3 +761,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
