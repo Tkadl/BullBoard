@@ -919,18 +919,40 @@ def main():
         
         st.markdown("---")
         
-        # Individual stock analysis for top performers
-        st.subheader("🔍 Individual Stock Analysis")
-        top_stocks = summary.nlargest(5, 'total_return')
+       # Individual stock analysis for ALL selected stocks
+st.subheader("🔍 Individual Stock Analysis")
+st.markdown("*Comprehensive analysis for all your selected stocks*")
+
+# Create portfolio context for all analyses
+portfolio_context = {
+    'avg_return': summary['total_return'].mean(),
+    'avg_volatility': summary['volatility_21'].mean()
+}
+
+# Analyze ALL selected stocks, sorted by return (best first, but show all)
+all_stocks = summary.sort_values('total_return', ascending=False)
+
+for _, row in all_stocks.iterrows():
+    # Get comprehensive insights for EVERY stock
+    comprehensive_insights = generate_comprehensive_analysis(row['symbol'], row, portfolio_context)
+    
+    if comprehensive_insights:
+        # Add a visual indicator for performance level
+        return_pct = row['total_return']
+        if return_pct > 0.15:
+            performance_indicator = "🚀 Strong Performer"
+        elif return_pct > 0.05:
+            performance_indicator = "📈 Positive"
+        elif return_pct > 0:
+            performance_indicator = "📊 Modest Gains"
+        elif return_pct > -0.10:
+            performance_indicator = "📉 Declining"
+        else:
+            performance_indicator = "⚠️ Significant Decline"
         
-        for _, row in top_stocks.iterrows():
-            # Get advanced insights
-            advanced_insights = generate_advanced_insights(row['symbol'], row)
-            
-            if advanced_insights:
-                with st.expander(f"📊 {row['symbol']} - Advanced Analysis"):
-                    for insight in advanced_insights:
-                        st.markdown(insight)
+        with st.expander(f"📊 {row['symbol']} - {performance_indicator} ({return_pct:.1%})"):
+            for insight in comprehensive_insights:
+                st.markdown(insight)
     # Interactive Charts Section
     st.markdown('<div class="section-header"><span class="section-icon">📊</span><h2>Interactive Analytics</h2></div>', unsafe_allow_html=True)
     
