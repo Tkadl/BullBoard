@@ -559,7 +559,7 @@ else:
     
     # REMOVED: All "consider" and "suggest" language
     
-    return insights
+return insights
 
 def create_risk_return_scatter(summary):
     """Create interactive risk vs return scatter plot"""
