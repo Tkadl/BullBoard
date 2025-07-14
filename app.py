@@ -426,7 +426,7 @@ def main():
             f"{date_range.days} days"
         ), unsafe_allow_html=True)
     
-    # Stock Selection
+   # Stock Selection
     st.markdown('<div class="section-header"><span class="section-icon">🎯</span><h2>Stock Selection</h2></div>', unsafe_allow_html=True)
     
     unique_symbols = sorted(df['symbol'].unique())
@@ -437,8 +437,7 @@ def main():
             "Choose stocks to analyze",
             unique_symbols,
             default=unique_symbols[:8] if len(unique_symbols) >= 8 else unique_symbols,
-            help,
-help="Select stocks for detailed analysis and comparison"
+            help="Select stocks for detailed analysis and comparison"
         )
     
     with col2:
