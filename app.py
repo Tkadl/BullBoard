@@ -357,6 +357,9 @@ def create_metric_card(title, value, subtitle="", icon="📊"):
         <div class="metric-subtitle">{subtitle}</div>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Return empty string to prevent "None" from appearing
+    return ""
         
 def calculate_comprehensive_risk_profile(symbol, data):
     """Calculate a comprehensive risk assessment"""
