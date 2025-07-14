@@ -152,11 +152,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def create_header():
-    """Create the main header section"""
+    """Create the main header section focused on simplicity"""
     st.markdown("""
     <div class="main-header">
         <h1>🐂 BullBoard</h1>
-        <p>Advanced Stock Risk & Yield Analytics Platform with AI Insights</p>
+        <p>Smart Stock Analysis Made Simple</p>
+        <p style="font-size: 0.9rem; opacity: 0.8;">Professional insights in plain English - perfect for busy investors</p>
     </div>
     """, unsafe_allow_html=True)
 
