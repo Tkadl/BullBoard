@@ -5,3 +5,6 @@ yfinance
 matplotlib
 fpdf
 plotly
+transformers
+torch
+sentencepiece
