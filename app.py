@@ -735,7 +735,16 @@ def main():
             if advanced_insights:
                 with st.expander(f"📊 {row['symbol']} - Advanced Analysis"):
                     for insight in advanced_insights:
-                        st.markdown(insight)
+                        # Determine card type based on content and apply CSS classes
+                        if any(word in insight.lower() for word in ['warning', 'concern', 'efficiency', 'poor']):
+                            # Warning card (yellow)
+                            st.markdown(f'<div class="warning-card">{insight}</div>', unsafe_allow_html=True)
+                        elif any(word in insight.lower() for word in ['alert', 'decline', 'risk', 'negative', 'avoid', 'drag']):
+                            # Risk card (red)
+                            st.markdown(f'<div class="risk-card">{insight}</div>', unsafe_allow_html=True)
+                        else:
+                            # Positive insight card (gray with green border)
+                            st.markdown(f'<div class="insight-card">{insight}</div>', unsafe_allow_html=True)
     # Interactive Charts Section
     st.markdown('<div class="section-header"><span class="section-icon">📊</span><h2>Interactive Analytics</h2></div>', unsafe_allow_html=True)
     
