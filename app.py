@@ -159,7 +159,7 @@ st.markdown("""
     }
 }
     
-/* Metric Cards - Enhanced Design */
+/* Metric Cards - Fixed height and text positioning */
 .metric-card {
     background: linear-gradient(145deg, #ffffff 0%, #f8fafc 50%, #ffffff 100%);
     border: 1px solid #e2e8f0;
@@ -169,7 +169,7 @@ st.markdown("""
         0 4px 6px -1px rgba(0, 0, 0, 0.1),
         0 2px 4px -1px rgba(0, 0, 0, 0.06),
         inset 0 1px 0 rgba(255, 255, 255, 0.6);
-    height: 140px;
+    height: 160px; /* Increased from 140px */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -234,10 +234,10 @@ st.markdown("""
 }
 
 .metric-value {
-    font-size: 32px !important;
+    font-size: 28px !important; /* Slightly smaller to make room */
     font-weight: 800 !important;
     color: #1e293b !important;
-    margin: 8px 0 !important;
+    margin: 8px 0 12px 0 !important; /* Added bottom margin */
     line-height: 1.1 !important;
     position: relative;
     z-index: 1;
@@ -245,16 +245,15 @@ st.markdown("""
 }
 
 .metric-subtitle {
-    font-size: 14px !important;  /* Increased from 12px */
+    font-size: 13px !important; /* Slightly smaller but still readable */
     color: #667eea !important;
     font-weight: 600 !important;
     position: relative;
     z-index: 1;
     text-transform: capitalize;
-    line-height: 1.3 !important;  /* Better line spacing */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;  /* Prevent text wrapping */
+    line-height: 1.2 !important;
+    margin-bottom: 4px !important; /* Add bottom margin */
+    display: block !important; /* Ensure it displays properly */
 }
 
 /* Section Headers - Keep existing styles */
