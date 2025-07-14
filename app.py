@@ -1062,17 +1062,19 @@ def main():
                 f"{worst_return:.2%} • Review",
                 "⚠️"
             )
-              portfolio_context = {
-                'avg_return': summary['total_return'].mean(),
-                'avg_volatility': summary['volatility_21'].mean() if 'volatility_21' in summary.columns else 0,
-                'portfolio_size': len(selected_symbols),
-                'best_performer': summary.loc[summary['total_return'].idxmax(), 'symbol'] if not summary.empty else None,
-                'worst_performer': summary.loc[summary['total_return'].idxmin(), 'symbol'] if not summary.empty else None
-            }
+   # Create portfolio context for individual stock analysis
+    portfolio_context = {
+        'avg_return': summary['total_return'].mean(),
+        'avg_volatility': summary['volatility_21'].mean() if 'volatility_21' in summary.columns else 0,
+        'portfolio_size': len(selected_symbols),
+        'best_performer': summary.loc[summary['total_return'].idxmax(), 'symbol'] if not summary.empty else None,
+        'worst_performer': summary.loc[summary['total_return'].idxmin(), 'symbol'] if not summary.empty else None
+    }
             
-            # Individual Stock Analysis Section
-            st.subheader("🔍 Individual Stock Analysis")
-            st.markdown("*Comprehensive analysis for all your selected stocks*")       
+    # Individual Stock Analysis Section
+    st.subheader("🔍 Individual Stock Analysis")
+    st.markdown("*Comprehensive analysis for all your selected stocks*")  
+    
     # Analyze ALL selected stocks, sorted by return (best first, but show all)
     all_stocks = summary.sort_values('total_return', ascending=False)
     
