@@ -245,12 +245,16 @@ st.markdown("""
 }
 
 .metric-subtitle {
-    font-size: 12px !important;
+    font-size: 14px !important;  /* Increased from 12px */
     color: #667eea !important;
     font-weight: 600 !important;
     position: relative;
     z-index: 1;
     text-transform: capitalize;
+    line-height: 1.3 !important;  /* Better line spacing */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;  /* Prevent text wrapping */
 }
 
 /* Section Headers - Keep existing styles */
@@ -981,7 +985,7 @@ def main():
         .reset_index()
     )
 
-     # Portfolio Overview
+    # Portfolio Overview
     if len(selected_symbols) > 1:
         st.markdown('<div class="section-header"><span class="section-icon">💼</span><h2>Portfolio Overview</h2></div>', unsafe_allow_html=True)
         
@@ -1001,7 +1005,7 @@ def main():
             if return_magnitude > 0.2:  # >20% return
                 return_descriptor = "Excellent" if portfolio_return > 0 else "Major Loss"
             elif return_magnitude > 0.1:  # >10% return
-                return_descriptor = "Strong" if portfolio_return > 0 else "Significant Loss"
+                return_descriptor = "Strong" if portfolio_return > 0 else "Heavy Loss"
             elif return_magnitude > 0.05:  # >5% return
                 return_descriptor = "Good" if portfolio_return > 0 else "Moderate Loss"
             elif return_magnitude > 0:
@@ -1023,13 +1027,13 @@ def main():
                 risk_level = "High Risk"
             elif portfolio_risk > 0.08:
                 risk_icon = "🟡"
-                risk_level = "Moderate Risk"
+                risk_level = "Moderate"
             elif portfolio_risk > 0.04:
                 risk_icon = "🟢"
                 risk_level = "Low Risk"
             else:
                 risk_icon = "🟢"
-                risk_level = "Very Low Risk"
+                risk_level = "Very Safe"
                 
             create_metric_card(
                 "Average Risk Score",
@@ -1039,44 +1043,27 @@ def main():
             )
         
         with col3:
-            # Best performer with contextual information
+            # Best performer with shorter context
             best_return = summary.loc[summary['symbol'] == best_performer, 'total_return'].iloc[0]
-            
-            # Calculate performance context
-            performance_gap = best_return - portfolio_return
-            context = f"Outperforming by {performance_gap:.1%}" if performance_gap > 0 else "Market Leader"
             
             create_metric_card(
                 "Best Performer",
                 best_performer,
-                f"{best_return:.2%} • {context[:15]}...",
+                f"{best_return:.2%} • Top Pick",
                 "🏆"
             )
         
         with col4:
-            # Worst performer with analytical context
+            # Worst performer with shorter context
             worst_return = summary.loc[summary['symbol'] == worst_performer, 'total_return'].iloc[0]
-            
-            # Calculate underperformance context
-            underperformance_gap = portfolio_return - worst_return
-            worst_context = f"Lagging by {underperformance_gap:.1%}" if underperformance_gap > 0 else "Needs Attention"
             
             create_metric_card(
                 "Worst Performer",
                 worst_performer,
-                f"{worst_return:.2%} • {worst_context[:15]}...",
+                f"{worst_return:.2%} • Review",
                 "⚠️"
             )
-        # Individual stock analysis for ALL selected stocks
-        st.subheader("🔍 Individual Stock Analysis")
-        st.markdown("*Comprehensive analysis for all your selected stocks*")
-        
-        # Create portfolio context for all analyses
-        portfolio_context = {
-            'avg_return': summary['total_return'].mean(),
-            'avg_volatility': summary['volatility_21'].mean()
-        }
-        
+            
     # Analyze ALL selected stocks, sorted by return (best first, but show all)
     all_stocks = summary.sort_values('total_return', ascending=False)
     
