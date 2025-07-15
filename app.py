@@ -1022,14 +1022,14 @@ if not filtered_df.empty:
             max_value=max_date
         )
         
-        if isinstance(date_range, tuple) and len(date_range) == 2:
+if isinstance(date_range, tuple) and len(date_range) == 2:
             start_date, end_date = date_range
             filtered_df = filtered_df[
                 (filtered_df['Date'] >= pd.to_datetime(start_date)) &
                 (filtered_df['Date'] <= pd.to_datetime(end_date))
             ]
     
-    if filtered_df.empty:
+if filtered_df.empty:
         st.warning("No data available for selected stocks and date range.")
         st.stop()
     
