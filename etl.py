@@ -34,9 +34,12 @@ def get_sp500_symbols():
     return sp500_symbols
 
 def main():
+    print("=== ETL MAIN FUNCTION STARTED ===")
+    print("=== ETL MAIN FUNCTION STARTED ===")
+    print("=== ETL MAIN FUNCTION STARTED ===")
+    
     # === USER CONFIGURATION ===
     tickers = get_sp500_symbols()  # Use dynamic S&P 500 list
-    
     # DEBUG: Let's see what we're actually getting
     print(f"DEBUG: Total tickers to fetch: {len(tickers)}")
     print(f"DEBUG: First 10 tickers: {tickers[:10]}")
