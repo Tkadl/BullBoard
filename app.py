@@ -1582,6 +1582,20 @@ def main():
                 etl.main()
             st.success("Data updated successfully!")
             st.rerun()
+
+         if st.button("🔄 Force Refresh UI", key="force_refresh_ui"):
+        # Clear all caches
+        st.cache_data.clear()
+        if hasattr(st, 'cache_resource'):
+            st.cache_resource.clear()
+        
+        # Clear session state
+        for key in list(st.session_state.keys()):
+            if key not in ['etl_button', 'force_refresh_ui']:  # Keep button states
+                del st.session_state[key]
+        
+        st.success("UI refreshed! Changes should now be visible.")
+        st.rerun()
         
         st.markdown("---")
         st.markdown("### 📊 Analysis Settings")
