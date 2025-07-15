@@ -157,145 +157,145 @@ def main():
     batch_size = 30  # Reduced batch size for better reliability with more symbols
     delay_between_batches = 2  # Add delay between batches
 
-     print(f"Checking for existing data and update requirements...")
-    
-        # Check what data we already have
-        existing_df, last_date, existing_symbols = get_last_update_info()
-        can_do_incremental, reason = should_do_incremental_update(last_date, existing_symbols, tickers)
-    
-        print(f"Update decision: {reason}")
-    
-        if can_do_incremental:
-            print("=== PERFORMING INCREMENTAL UPDATE ===")
+    print(f"Checking for existing data and update requirements...")
+
+    # Check what data we already have
+    existing_df, last_date, existing_symbols = get_last_update_info()
+    can_do_incremental, reason = should_do_incremental_update(last_date, existing_symbols, tickers)
+
+    print(f"Update decision: {reason}")
+
+    if can_do_incremental:
+        print("=== PERFORMING INCREMENTAL UPDATE ===")
+        
+        # Fetch only new data
+        good_dfs, bad_tickers = fetch_incremental_data(
+            tickers, last_date, end_date, min_days_needed, batch_size, delay_between_batches
+        )
+        
+        print(f"Incremental fetch: {len(good_dfs)} symbols updated, {len(bad_tickers)} failed")
+        
+        if good_dfs:
+            # Combine new data
+            new_df = pd.concat(good_dfs, ignore_index=True)
+            new_df = new_df[['symbol', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
             
-            # Fetch only new data
-            good_dfs, bad_tickers = fetch_incremental_data(
-                tickers, last_date, end_date, min_days_needed, batch_size, delay_between_batches
-            )
+            # Add timestamp for new data
+            download_time = datetime.now()
+            new_df['download_time'] = download_time.strftime('%Y-%m-%d %H:%M')
             
-            print(f"Incremental fetch: {len(good_dfs)} symbols updated, {len(bad_tickers)} failed")
+            # Combine with existing data
+            df = pd.concat([existing_df, new_df], ignore_index=True)
             
-            if good_dfs:
-                # Combine new data
-                new_df = pd.concat(good_dfs, ignore_index=True)
-                new_df = new_df[['symbol', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
-                
-                # Add timestamp for new data
-                download_time = datetime.now()
-                new_df['download_time'] = download_time.strftime('%Y-%m-%d %H:%M')
-                
-                # Combine with existing data
-                df = pd.concat([existing_df, new_df], ignore_index=True)
-                
-                # Remove duplicates (in case of overlap)
-                df = df.drop_duplicates(subset=['symbol', 'Date'], keep='last')
-                df = df.sort_values(['symbol', 'Date']).reset_index(drop=True)
-                
-                print(f"Combined dataset: {len(df)} total records")
-            else:
-                print("No new data fetched - using existing data")
-                df = existing_df
-    
+            # Remove duplicates (in case of overlap)
+            df = df.drop_duplicates(subset=['symbol', 'Date'], keep='last')
+            df = df.sort_values(['symbol', 'Date']).reset_index(drop=True)
+            
+            print(f"Combined dataset: {len(df)} total records")
         else:
-            print("=== PERFORMING FULL REFRESH ===")
+            print("No new data fetched - using existing data")
+            df = existing_df
+
+    else:
+        print("=== PERFORMING FULL REFRESH ===")
+        
+        print(f"Fetching data for {len(tickers)} symbols...")
+        
+        good_dfs = []
+        bad_tickers = []
+
+        # Download data in batches with progress tracking
+        total_batches = (len(tickers) + batch_size - 1) // batch_size
+        
+        for batch_num, i in enumerate(range(0, len(tickers), batch_size), 1):
+            batch = tickers[i:i+batch_size]
+            print(f"Processing batch {batch_num}/{total_batches} ({len(batch)} symbols)...")
             
-            print(f"Fetching data for {len(tickers)} symbols...")
-            
-            good_dfs = []
-            bad_tickers = []
-    
-            # Download data in batches with progress tracking
-            total_batches = (len(tickers) + batch_size - 1) // batch_size
-            
-            for batch_num, i in enumerate(range(0, len(tickers), batch_size), 1):
-                batch = tickers[i:i+batch_size]
-                print(f"Processing batch {batch_num}/{total_batches} ({len(batch)} symbols)...")
+            try:
+                raw = yf.download(
+                    tickers=" ".join(batch),
+                    start=start_date,
+                    end=end_date,
+                    group_by='ticker',
+                    auto_adjust=True,
+                    progress=False,
+                    threads=True
+                )
                 
-                try:
-                    raw = yf.download(
-                        tickers=" ".join(batch),
-                        start=start_date,
-                        end=end_date,
-                        group_by='ticker',
-                        auto_adjust=True,
-                        progress=False,
-                        threads=True
-                    )
-                    
-                    if len(batch) == 1:
-                        ticker = batch[0]
-                        temp = raw.copy()
-                        if temp.empty or len(temp) < min_days_needed:
-                            bad_tickers.append(ticker)
-                            continue
-                        temp['symbol'] = ticker
-                        temp['Date'] = temp.index
-                        good_dfs.append(temp.reset_index(drop=True))
-                    else:
-                        for ticker in batch:
-                            try:
-                                temp = raw[ticker].copy()
-                                if temp.empty or len(temp) < min_days_needed:
-                                    bad_tickers.append(ticker)
-                                    continue
-                                temp['symbol'] = ticker
-                                temp['Date'] = temp.index
-                                good_dfs.append(temp.reset_index(drop=True))
-                            except KeyError:
+                if len(batch) == 1:
+                    ticker = batch[0]
+                    temp = raw.copy()
+                    if temp.empty or len(temp) < min_days_needed:
+                        bad_tickers.append(ticker)
+                        continue
+                    temp['symbol'] = ticker
+                    temp['Date'] = temp.index
+                    good_dfs.append(temp.reset_index(drop=True))
+                else:
+                    for ticker in batch:
+                        try:
+                            temp = raw[ticker].copy()
+                            if temp.empty or len(temp) < min_days_needed:
                                 bad_tickers.append(ticker)
                                 continue
-                                
-                except Exception as e:
-                    print(f"Error in batch {batch_num}: {e}")
-                    bad_tickers.extend(batch)
-                    continue
-                    
-                if delay_between_batches > 0:
-                    time.sleep(delay_between_batches)
-    
-            print(f"Successfully fetched: {len(good_dfs)} symbols")
-            print(f"Failed to fetch: {len(bad_tickers)} symbols")
-            if bad_tickers:
-                print(f"Failed symbols: {bad_tickers[:10]}{'...' if len(bad_tickers) > 10 else ''}")
-    
-            if good_dfs:
-                df = pd.concat(good_dfs, ignore_index=True)
-                df = df[['symbol', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
-            else:
-                print("No data fetched — check your internet connection and ticker list.")
-                return
-    
-            # TIMESTAMP DATA DOWNLOAD
-            download_time = datetime.now()
-            df['download_time'] = download_time.strftime('%Y-%m-%d %H:%M')
-    
-        # DATA VALIDATION BEFORE CALC
-        bad_symbols = []
-        for sym, group in df.groupby('symbol'):
-            if group.shape[0] < min_days_needed:
-                bad_symbols.append(sym)
-        df = df[~df['symbol'].isin(bad_symbols)]
-    
-        # ROLLING ANALYTICS
-        df = df.sort_values(['symbol', 'Date']).reset_index(drop=True)
-        df['daily_return'] = df.groupby('symbol')['Close'].pct_change(fill_method=None)
-        df['volatility_21'] = df.groupby('symbol')['daily_return'].rolling(rolling_vol_days).std().reset_index(0, drop=True)
-        df['rolling_yield_21'] = df.groupby('symbol')['daily_return'].rolling(rolling_vol_days).mean().reset_index(0, drop=True)
-        df['sharpe_21'] = (df['rolling_yield_21'] / df['volatility_21']) * np.sqrt(252)
-        df['max_drawdown_63'] = df.groupby('symbol')['Close'].rolling(rolling_drawdown_days)\
-            .apply(lambda x: (np.max(x) - np.min(x)) / np.max(x) if len(x) > 0 and np.max(x) != 0 else 0, raw=False)\
-            .reset_index(0, drop=True)
-        df['custom_risk_score'] = df['volatility_21'] * 0.7 + df['max_drawdown_63'] * 0.3
-    
-        # Get each stock's latest analytics
-        latest = df.sort_values('Date').groupby('symbol').tail(1)
-        latest = latest[['symbol', 'Date', 'custom_risk_score', 'rolling_yield_21', 'sharpe_21', 'volatility_21', 'max_drawdown_63']].copy()
-        latest = latest.sort_values('custom_risk_score', ascending=False)
-        latest.reset_index(drop=True, inplace=True)
-    
-        # Save summary table for Streamlit app
-        df.to_csv("latest_results.csv", index=False)
-        print(f"Data saved to latest_results.csv with {len(df)} total records for {df['symbol'].nunique()} unique symbols")
+                            temp['symbol'] = ticker
+                            temp['Date'] = temp.index
+                            good_dfs.append(temp.reset_index(drop=True))
+                        except KeyError:
+                            bad_tickers.append(ticker)
+                            continue
+                            
+            except Exception as e:
+                print(f"Error in batch {batch_num}: {e}")
+                bad_tickers.extend(batch)
+                continue
+                
+            if delay_between_batches > 0:
+                time.sleep(delay_between_batches)
+
+        print(f"Successfully fetched: {len(good_dfs)} symbols")
+        print(f"Failed to fetch: {len(bad_tickers)} symbols")
+        if bad_tickers:
+            print(f"Failed symbols: {bad_tickers[:10]}{'...' if len(bad_tickers) > 10 else ''}")
+
+        if good_dfs:
+            df = pd.concat(good_dfs, ignore_index=True)
+            df = df[['symbol', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
+        else:
+            print("No data fetched — check your internet connection and ticker list.")
+            return
+
+        # TIMESTAMP DATA DOWNLOAD
+        download_time = datetime.now()
+        df['download_time'] = download_time.strftime('%Y-%m-%d %H:%M')
+
+    # DATA VALIDATION BEFORE CALC
+    bad_symbols = []
+    for sym, group in df.groupby('symbol'):
+        if group.shape[0] < min_days_needed:
+            bad_symbols.append(sym)
+    df = df[~df['symbol'].isin(bad_symbols)]
+
+    # ROLLING ANALYTICS
+    df = df.sort_values(['symbol', 'Date']).reset_index(drop=True)
+    df['daily_return'] = df.groupby('symbol')['Close'].pct_change(fill_method=None)
+    df['volatility_21'] = df.groupby('symbol')['daily_return'].rolling(rolling_vol_days).std().reset_index(0, drop=True)
+    df['rolling_yield_21'] = df.groupby('symbol')['daily_return'].rolling(rolling_vol_days).mean().reset_index(0, drop=True)
+    df['sharpe_21'] = (df['rolling_yield_21'] / df['volatility_21']) * np.sqrt(252)
+    df['max_drawdown_63'] = df.groupby('symbol')['Close'].rolling(rolling_drawdown_days)\
+        .apply(lambda x: (np.max(x) - np.min(x)) / np.max(x) if len(x) > 0 and np.max(x) != 0 else 0, raw=False)\
+        .reset_index(0, drop=True)
+    df['custom_risk_score'] = df['volatility_21'] * 0.7 + df['max_drawdown_63'] * 0.3
+
+    # Get each stock's latest analytics
+    latest = df.sort_values('Date').groupby('symbol').tail(1)
+    latest = latest[['symbol', 'Date', 'custom_risk_score', 'rolling_yield_21', 'sharpe_21', 'volatility_21', 'max_drawdown_63']].copy()
+    latest = latest.sort_values('custom_risk_score', ascending=False)
+    latest.reset_index(drop=True, inplace=True)
+
+    # Save summary table for Streamlit app
+    df.to_csv("latest_results.csv", index=False)
+    print(f"Data saved to latest_results.csv with {len(df)} total records for {df['symbol'].nunique()} unique symbols")
 
 if __name__ == "__main__":
     main()
