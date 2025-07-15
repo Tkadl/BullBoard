@@ -939,6 +939,720 @@ def create_enhanced_stock_selection(unique_symbols):
     
     return selected_symbols
 
+def get_complete_symbol_name_mapping():
+    """Complete mapping of S&P 500 ticker symbols to company names"""
+    return {
+        # A
+        'A': 'Agilent Technologies Inc.',
+        'AAL': 'American Airlines Group Inc.',
+        'AAP': 'Advance Auto Parts Inc.',
+        'AAPL': 'Apple Inc.',
+        'ABBV': 'AbbVie Inc.',
+        'ABC': 'AmerisourceBergen Corp.',
+        'ABMD': 'Abiomed Inc.',
+        'ABT': 'Abbott Laboratories',
+        'ACN': 'Accenture PLC',
+        'ADBE': 'Adobe Inc.',
+        'ADI': 'Analog Devices Inc.',
+        'ADM': 'Archer-Daniels-Midland Co.',
+        'ADP': 'Automatic Data Processing Inc.',
+        'ADSK': 'Autodesk Inc.',
+        'AEE': 'Ameren Corp.',
+        'AEP': 'American Electric Power Co. Inc.',
+        'AES': 'AES Corp.',
+        'AFL': 'Aflac Inc.',
+        'AIG': 'American International Group Inc.',
+        'AIZ': 'Assurant Inc.',
+        'AJG': 'Arthur J. Gallagher & Co.',
+        'AKAM': 'Akamai Technologies Inc.',
+        'ALB': 'Albemarle Corp.',
+        'ALGN': 'Align Technology Inc.',
+        'ALK': 'Alaska Air Group Inc.',
+        'ALL': 'Allstate Corp.',
+        'ALLE': 'Allegion PLC',
+        'AMAT': 'Applied Materials Inc.',
+        'AMCR': 'Amcor PLC',
+        'AMD': 'Advanced Micro Devices Inc.',
+        'AME': 'AMETEK Inc.',
+        'AMGN': 'Amgen Inc.',
+        'AMP': 'Ameriprise Financial Inc.',
+        'AMT': 'American Tower Corp.',
+        'AMZN': 'Amazon.com Inc.',
+        'ANET': 'Arista Networks Inc.',
+        'ANSS': 'ANSYS Inc.',
+        'AON': 'Aon PLC',
+        'AOS': 'A.O. Smith Corp.',
+        'APA': 'APA Corp.',
+        'APD': 'Air Products and Chemicals Inc.',
+        'APH': 'Amphenol Corp.',
+        'APTV': 'Aptiv PLC',
+        'ARE': 'Alexandria Real Estate Equities Inc.',
+        'ATO': 'Atmos Energy Corp.',
+        'ATVI': 'Activision Blizzard Inc.',
+        'AVB': 'AvalonBay Communities Inc.',
+        'AVGO': 'Broadcom Inc.',
+        'AVY': 'Avery Dennison Corp.',
+        'AWK': 'American Water Works Co. Inc.',
+        'AXP': 'American Express Co.',
+        'AZO': 'AutoZone Inc.',
+        
+        # B
+        'BA': 'Boeing Co.',
+        'BAC': 'Bank of America Corp.',
+        'BALL': 'Ball Corp.',
+        'BAX': 'Baxter International Inc.',
+        'BBWI': 'Bath & Body Works Inc.',
+        'BBY': 'Best Buy Co. Inc.',
+        'BDX': 'Becton Dickinson and Co.',
+        'BEN': 'Franklin Resources Inc.',
+        'BF-B': 'Brown-Forman Corp.',
+        'BIIB': 'Biogen Inc.',
+        'BIO': 'Bio-Rad Laboratories Inc.',
+        'BK': 'Bank of New York Mellon Corp.',
+        'BKNG': 'Booking Holdings Inc.',
+        'BKR': 'Baker Hughes Co.',
+        'BLK': 'BlackRock Inc.',
+        'BMY': 'Bristol-Myers Squibb Co.',
+        'BR': 'Broadridge Financial Solutions Inc.',
+        'BRK-B': 'Berkshire Hathaway Inc.',
+         'BRO': 'Brown & Brown Inc.',
+        'BSX': 'Boston Scientific Corp.',
+        'BWA': 'BorgWarner Inc.',
+        
+        # C
+        'C': 'Citigroup Inc.',
+        'CAG': 'Conagra Brands Inc.',
+        'CAH': 'Cardinal Health Inc.',
+        'CARR': 'Carrier Global Corp.',
+        'CAT': 'Caterpillar Inc.',
+        'CB': 'Chubb Ltd.',
+        'CBOE': 'Cboe Global Markets Inc.',
+        'CBRE': 'CBRE Group Inc.',
+        'CCI': 'Crown Castle Inc.',
+        'CCL': 'Carnival Corp.',
+        'CDAY': 'Ceridian HCM Holding Inc.',
+        'CDNS': 'Cadence Design Systems Inc.',
+        'CDW': 'CDW Corp.',
+        'CE': 'Celanese Corp.',
+        'CEG': 'Constellation Energy Corp.',
+        'CHTR': 'Charter Communications Inc.',
+        'CI': 'Cigna Corp.',
+        'CINF': 'Cincinnati Financial Corp.',
+        'CL': 'Colgate-Palmolive Co.',
+        'CLX': 'Clorox Co.',
+        'CMA': 'Comerica Inc.',
+        'CMCSA': 'Comcast Corp.',
+        'CME': 'CME Group Inc.',
+        'CMG': 'Chipotle Mexican Grill Inc.',
+        'CMI': 'Cummins Inc.',
+        'CMS': 'CMS Energy Corp.',
+        'CNC': 'Centene Corp.',
+        'CNP': 'CenterPoint Energy Inc.',
+        'COF': 'Capital One Financial Corp.',
+        'COO': 'Cooper Cos. Inc.',
+        'COP': 'ConocoPhillips',
+        'COST': 'Costco Wholesale Corp.',
+        'CPB': 'Campbell Soup Co.',
+        'CPRT': 'Copart Inc.',
+        'CRM': 'Salesforce Inc.',
+        'CSCO': 'Cisco Systems Inc.',
+        'CSX': 'CSX Corp.',
+        'CTAS': 'Cintas Corp.',
+        'CTLT': 'Catalent Inc.',
+        'CTRA': 'Coterra Energy Inc.',
+        'CTSH': 'Cognizant Technology Solutions Corp.',
+        'CTVA': 'Corteva Inc.',
+        'CVS': 'CVS Health Corp.',
+        'CVX': 'Chevron Corp.',
+        'CZR': 'Caesars Entertainment Inc.',
+        
+        # D
+        'D': 'Dominion Energy Inc.',
+        'DAL': 'Delta Air Lines Inc.',
+        'DD': 'DuPont de Nemours Inc.',
+        'DE': 'Deere & Co.',
+        'DFS': 'Discover Financial Services',
+        'DG': 'Dollar General Corp.',
+        'DGX': 'Quest Diagnostics Inc.',
+        'DHI': 'D.R. Horton Inc.',
+        'DHR': 'Danaher Corp.',
+        'DIS': 'Walt Disney Co.',
+        'DISH': 'DISH Network Corp.',
+        'DLR': 'Digital Realty Trust Inc.',
+        'DLTR': 'Dollar Tree Inc.',
+        'DOV': 'Dover Corp.',
+        'DOW': 'Dow Inc.',
+        'DPZ': 'Domino\'s Pizza Inc.',
+        'DRE': 'Duke Realty Corp.',
+        'DRI': 'Darden Restaurants Inc.',
+        'DTE': 'DTE Energy Co.',
+        'DUK': 'Duke Energy Corp.',
+        'DVA': 'DaVita Inc.',
+        'DVN': 'Devon Energy Corp.',
+        
+        # E
+        'EA': 'Electronic Arts Inc.',
+        'EBAY': 'eBay Inc.',
+        'ECL': 'Ecolab Inc.',
+        'ED': 'Consolidated Edison Inc.',
+        'EFX': 'Equifax Inc.',
+        'EIX': 'Edison International',
+        'EL': 'Estee Lauder Cos. Inc.',
+        'EMN': 'Eastman Chemical Co.',
+        'EMR': 'Emerson Electric Co.',
+        'ENPH': 'Enphase Energy Inc.',
+        'EOG': 'EOG Resources Inc.',
+        'EPAM': 'EPAM Systems Inc.',
+        'EQIX': 'Equinix Inc.',
+        'EQR': 'Equity Residential',
+        'ES': 'Eversource Energy',
+        'ESS': 'Essex Property Trust Inc.',
+        'ETN': 'Eaton Corp. PLC',
+        'ETR': 'Entergy Corp.',
+        'ETSY': 'Etsy Inc.',
+        'EVRG': 'Evergy Inc.',
+        'EW': 'Edwards Lifesciences Corp.',
+        'EXC': 'Exelon Corp.',
+        'EXPD': 'Expeditors International of Washington Inc.',
+        'EXPE': 'Expedia Group Inc.',
+        'EXR': 'Extended Stay America Inc.',
+        
+        # F
+        'F': 'Ford Motor Co.',
+        'FANG': 'Diamondback Energy Inc.',
+        'FAST': 'Fastenal Co.',
+        'FBHS': 'Fortune Brands Home & Security Inc.',
+        'FCX': 'Freeport-McMoRan Inc.',
+        'FDS': 'FactSet Research Systems Inc.',
+        'FDX': 'FedEx Corp.',
+        'FE': 'FirstEnergy Corp.',
+        'FFIV': 'F5 Inc.',
+        'FIS': 'Fidelity National Information Services Inc.',
+        'FISV': 'Fiserv Inc.',
+        'FITB': 'Fifth Third Bancorp',
+        'FLT': 'FleetCor Technologies Inc.',
+        'FMC': 'FMC Corp.',
+        'FOX': 'Fox Corp.',
+        'FOXA': 'Fox Corp.',
+        'FRC': 'First Republic Bank',
+        'FRT': 'Federal Realty Investment Trust',
+        'FTNT': 'Fortinet Inc.',
+        'FTV': 'Fortive Corp.',
+        
+        # G
+        'GD': 'General Dynamics Corp.',
+        'GE': 'General Electric Co.',
+        'GILD': 'Gilead Sciences Inc.',
+        'GIS': 'General Mills Inc.',
+        'GL': 'Globe Life Inc.',
+        'GLW': 'Corning Inc.',
+        'GM': 'General Motors Co.',
+        'GNRC': 'Generac Holdings Inc.',
+        'GOOG': 'Alphabet Inc.',
+        'GOOGL': 'Alphabet Inc.',
+        'GPC': 'Genuine Parts Co.',
+        'GPN': 'Global Payments Inc.',
+        'GRMN': 'Garmin Ltd.',
+        'GS': 'Goldman Sachs Group Inc.',
+        'GWW': 'W.W. Grainger Inc.',
+        
+        # H
+        'HAL': 'Halliburton Co.',
+        'HAS': 'Hasbro Inc.',
+        'HBAN': 'Huntington Bancshares Inc.',
+        'HBI': 'Hanesbrands Inc.',
+        'HCA': 'HCA Healthcare Inc.',
+        'HD': 'Home Depot Inc.',
+        'HES': 'Hess Corp.',
+        'HIG': 'Hartford Financial Services Group Inc.',
+        'HII': 'Huntington Ingalls Industries Inc.',
+        'HLT': 'Hilton Worldwide Holdings Inc.',
+        'HOLX': 'Hologic Inc.',
+        'HON': 'Honeywell International Inc.',
+        'HPE': 'Hewlett Packard Enterprise Co.',
+        'HPQ': 'HP Inc.',
+        'HRL': 'Hormel Foods Corp.',
+        'HSIC': 'Henry Schein Inc.',
+        'HST': 'Host Hotels & Resorts Inc.',
+        'HSY': 'Hershey Co.',
+        'HUM': 'Humana Inc.',
+        'HWM': 'Howmet Aerospace Inc.',
+        
+        # I
+        'IBM': 'International Business Machines Corp.',
+        'ICE': 'Intercontinental Exchange Inc.',
+        'IDXX': 'IDEXX Laboratories Inc.',
+        'IEX': 'IDEX Corp.',
+        'IFF': 'International Flavors & Fragrances Inc.',
+        'ILMN': 'Illumina Inc.',
+        'INCY': 'Incyte Corp.',
+        'INFO': 'IHS Markit Ltd.',
+        'INTC': 'Intel Corp.',
+        'INTU': 'Intuit Inc.',
+        'IP': 'International Paper Co.',
+        'IPG': 'Interpublic Group of Cos. Inc.',
+        'IPGP': 'IPG Photonics Corp.',
+        'IQV': 'IQVIA Holdings Inc.',
+        'IR': 'Ingersoll Rand Inc.',
+        'IRM': 'Iron Mountain Inc.',
+        'ISRG': 'Intuitive Surgical Inc.',
+        'IT': 'Gartner Inc.',
+        'ITW': 'Illinois Tool Works Inc.',
+        'IVZ': 'Invesco Ltd.',
+        
+        # J
+        'JBHT': 'J.B. Hunt Transport Services Inc.',
+        'JCI': 'Johnson Controls International PLC',
+        'JKHY': 'Jack Henry & Associates Inc.',
+        'JNJ': 'Johnson & Johnson',
+        'JNPR': 'Juniper Networks Inc.',
+        'JPM': 'JPMorgan Chase & Co.',
+        'JWN': 'Nordstrom Inc.',
+        
+        # K
+        'K': 'Kellogg Co.',
+        'KEY': 'KeyCorp',
+        'KEYS': 'Keysight Technologies Inc.',
+        'KHC': 'Kraft Heinz Co.',
+        'KIM': 'Kimco Realty Corp.',
+        'KLAC': 'KLA Corp.',
+        'KMB': 'Kimberly-Clark Corp.',
+        'KMI': 'Kinder Morgan Inc.',
+        'KMX': 'CarMax Inc.',
+        'KO': 'Coca-Cola Co.',
+        'KR': 'Kroger Co.',
+        'KSS': 'Kohl\'s Corp.',
+        
+        # L
+        'L': 'Loews Corp.',
+        'LDOS': 'Leidos Holdings Inc.',
+        'LEG': 'Leggett & Platt Inc.',
+        'LEN': 'Lennar Corp.',
+        'LH': 'Laboratory Corp. of America Holdings',
+        'LHX': 'L3Harris Technologies Inc.',
+        'LIN': 'Linde PLC',
+        'LKQ': 'LKQ Corp.',
+        'LLY': 'Eli Lilly and Co.',
+        'LMT': 'Lockheed Martin Corp.',
+        'LNC': 'Lincoln National Corp.',
+        'LNT': 'Alliant Energy Corp.',
+        'LOW': 'Lowe\'s Cos. Inc.',
+        'LRCX': 'Lam Research Corp.',
+        'LUMN': 'Lumen Technologies Inc.',
+        'LUV': 'Southwest Airlines Co.',
+        'LVS': 'Las Vegas Sands Corp.',
+        'LW': 'Lamb Weston Holdings Inc.',
+        'LYB': 'LyondellBasell Industries NV',
+        'LYV': 'Live Nation Entertainment Inc.',
+        
+        # M
+        'MA': 'Mastercard Inc.',
+        'MAA': 'Mid-America Apartment Communities Inc.',
+        'MAR': 'Marriott International Inc.',
+        'MAS': 'Masco Corp.',
+        'MCD': 'McDonald\'s Corp.',
+        'MCHP': 'Microchip Technology Inc.',
+        'MCK': 'McKesson Corp.',
+        'MCO': 'Moody\'s Corp.',
+        'MDLZ': 'Mondelez International Inc.',
+        'MDT': 'Medtronic PLC',
+        'MET': 'MetLife Inc.',
+        'META': 'Meta Platforms Inc.',
+        'MGM': 'MGM Resorts International',
+        'MHK': 'Mohawk Industries Inc.',
+        'MKC': 'McCormick & Co. Inc.',
+        'MKTX': 'MarketAxess Holdings Inc.',
+        'MLM': 'Martin Marietta Materials Inc.',
+        'MMC': 'Marsh & McLennan Cos. Inc.',
+        'MMM': '3M Co.',
+        'MNST': 'Monster Beverage Corp.',
+        'MO': 'Altria Group Inc.',
+        'MOH': 'Molina Healthcare Inc.',
+        'MOS': 'Mosaic Co.',
+        'MPC': 'Marathon Petroleum Corp.',
+        'MPWR': 'Monolithic Power Systems Inc.',
+        'MRK': 'Merck & Co. Inc.',
+        'MRNA': 'Moderna Inc.',
+        'MRO': 'Marathon Oil Corp.',
+        'MS': 'Morgan Stanley',
+        'MSCI': 'MSCI Inc.',
+        'MSFT': 'Microsoft Corp.',
+        'MSI': 'Motorola Solutions Inc.',
+        'MTB': 'M&T Bank Corp.',
+        'MTCH': 'Match Group Inc.',
+        'MTD': 'Mettler-Toledo International Inc.',
+        'MU': 'Micron Technology Inc.',
+        'NCLH': 'Norwegian Cruise Line Holdings Ltd.',
+        'NDAQ': 'Nasdaq Inc.',
+        'NDSN': 'Nordson Corp.',
+        'NEE': 'NextEra Energy Inc.',
+        'NEM': 'Newmont Corp.',
+        'NFLX': 'Netflix Inc.',
+        'NI': 'NiSource Inc.',
+        'NKE': 'Nike Inc.',
+        'NLOK': 'NortonLifeLock Inc.',
+        'NLSN': 'Nielsen Holdings PLC',
+        'NOC': 'Northrop Grumman Corp.',
+        'NOW': 'ServiceNow Inc.',
+        'NRG': 'NRG Energy Inc.',
+        'NSC': 'Norfolk Southern Corp.',
+        'NTAP': 'NetApp Inc.',
+        'NTRS': 'Northern Trust Corp.',
+        'NUE': 'Nucor Corp.',
+        'NVDA': 'NVIDIA Corp.',
+        'NVR': 'NVR Inc.',
+        'NWL': 'Newell Brands Inc.',
+        'NWS': 'News Corp.',
+        'NWSA': 'News Corp.',
+        
+        # O
+        'ODFL': 'Old Dominion Freight Line Inc.',
+        'OGN': 'Organon & Co.',
+        'OKE': 'ONEOK Inc.',
+        'OMC': 'Omnicom Group Inc.',
+        'ORCL': 'Oracle Corp.',
+        'ORLY': 'O\'Reilly Automotive Inc.',
+        'OTIS': 'Otis Worldwide Corp.',
+        'OXY': 'Occidental Petroleum Corp.',
+        
+        # P
+        'PARA': 'Paramount Global',
+        'PAYC': 'Paycom Software Inc.',
+        'PAYX': 'Paychex Inc.',
+        'PCAR': 'PACCAR Inc.',
+        'PCG': 'PG&E Corp.',
+        'PEAK': 'Healthpeak Properties Inc.',
+        'PEG': 'Public Service Enterprise Group Inc.',
+        'PEP': 'PepsiCo Inc.',
+        'PFE': 'Pfizer Inc.',
+        'PFG': 'Principal Financial Group Inc.',
+        'PG': 'Procter & Gamble Co.',
+        'PGR': 'Progressive Corp.',
+        'PH': 'Parker-Hannifin Corp.',
+        'PHM': 'PulteGroup Inc.',
+        'PKG': 'Packaging Corp. of America',
+        'PKI': 'PerkinElmer Inc.',
+        'PLD': 'Prologis Inc.',
+        'PM': 'Philip Morris International Inc.',
+        'PNC': 'PNC Financial Services Group Inc.',
+        'PNR': 'Pentair PLC',
+        'PNW': 'Pinnacle West Capital Corp.',
+        'POOL': 'Pool Corp.',
+        'PPG': 'PPG Industries Inc.',
+        'PPL': 'PPL Corp.',
+        'PRU': 'Prudential Financial Inc.',
+        'PSA': 'Public Storage',
+        'PSX': 'Phillips 66',
+        'PTC': 'PTC Inc.',
+        'PVH': 'PVH Corp.',
+        'PWR': 'Quanta Services Inc.',
+        'PXD': 'Pioneer Natural Resources Co.',
+        'PYPL': 'PayPal Holdings Inc.',
+        
+        # Q-R
+        'QCOM': 'Qualcomm Inc.',
+        'QRVO': 'Qorvo Inc.',
+        'RCL': 'Royal Caribbean Cruises Ltd.',
+        'RE': 'Everest Re Group Ltd.',
+        'REG': 'Regency Centers Corp.',
+        'REGN': 'Regeneron Pharmaceuticals Inc.',
+        'RF': 'Regions Financial Corp.',
+        'RHI': 'Robert Half Inc.',
+        'RJF': 'Raymond James Financial Inc.',
+        'RL': 'Ralph Lauren Corp.',
+        'RMD': 'ResMed Inc.',
+        'ROK': 'Rockwell Automation Inc.',
+        'ROL': 'Rollins Inc.',
+        'ROP': 'Roper Technologies Inc.',
+        'ROST': 'Ross Stores Inc.',
+        'RSG': 'Republic Services Inc.',
+        'RTX': 'Raytheon Technologies Corp.',
+        
+        # S
+        'SBAC': 'SBA Communications Corp.',
+        'SBNY': 'Signature Bank',
+        'SBUX': 'Starbucks Corp.',
+        'SCHW': 'Charles Schwab Corp.',
+        'SEDG': 'SolarEdge Technologies Inc.',
+        'SEE': 'Sealed Air Corp.',
+        'SHW': 'Sherwin-Williams Co.',
+        'SIVB': 'SVB Financial Group',
+        'SJM': 'J.M. Smucker Co.',
+        'SLB': 'Schlumberger NV',
+        'SNA': 'Snap-on Inc.',
+        'SNPS': 'Synopsys Inc.',
+        'SO': 'Southern Co.',
+        'SPG': 'Simon Property Group Inc.',
+        'SPGI': 'S&P Global Inc.',
+        'SRE': 'Sempra Energy',
+        'STE': 'STERIS PLC',
+        'STT': 'State Street Corp.',
+        'STX': 'Seagate Technology Holdings PLC',
+        'STZ': 'Constellation Brands Inc.',
+        'SWK': 'Stanley Black & Decker Inc.',
+        'SWKS': 'Skyworks Solutions Inc.',
+        'SYF': 'Synchrony Financial',
+        'SYK': 'Stryker Corp.',
+        'SYY': 'Sysco Corp.',
+        
+        # T
+        'T': 'AT&T Inc.',
+        'TAP': 'Molson Coors Beverage Co.',
+        'TDG': 'TransDigm Group Inc.',
+        'TDY': 'Teledyne Technologies Inc.',
+        'TECH': 'Bio-Techne Corp.',
+        'TEL': 'TE Connectivity Ltd.',
+        'TER': 'Teradyne Inc.',
+        'TFC': 'Truist Financial Corp.',
+        'TFX': 'Teleflex Inc.',
+        'TGT': 'Target Corp.',
+        'TJX': 'TJX Cos. Inc.',
+        'TMO': 'Thermo Fisher Scientific Inc.',
+        'TMUS': 'T-Mobile US Inc.',
+        'TPG': 'TPG Inc.',
+        'TPR': 'Tapestry Inc.',
+        'TRMB': 'Trimble Inc.',
+        'TROW': 'T. Rowe Price Group Inc.',
+        'TRV': 'Travelers Cos. Inc.',
+        'TSCO': 'Tractor Supply Co.',
+        'TSLA': 'Tesla Inc.',
+        'TSN': 'Tyson Foods Inc.',
+        'TT': 'Trane Technologies PLC',
+        'TTWO': 'Take-Two Interactive Software Inc.',
+        'TXN': 'Texas Instruments Inc.',
+        'TXT': 'Textron Inc.',
+        'TYL': 'Tyler Technologies Inc.',
+        
+        # U-V
+        'UAL': 'United Airlines Holdings Inc.',
+        'UDR': 'UDR Inc.',
+        'UHS': 'Universal Health Services Inc.',
+        'ULTA': 'Ulta Beauty Inc.',
+        'UNH': 'UnitedHealth Group Inc.',
+        'UNP': 'Union Pacific Corp.',
+        'UPS': 'United Parcel Service Inc.',
+        'URI': 'United Rentals Inc.',
+        'USB': 'U.S. Bancorp',
+        'V': 'Visa Inc.',
+        'VFC': 'V.F. Corp.',
+        'VLO': 'Valero Energy Corp.',
+        'VMC': 'Vulcan Materials Co.',
+        'VNO': 'Vornado Realty Trust',
+        'VRSK': 'Verisk Analytics Inc.',
+        'VRSN': 'VeriSign Inc.',
+        'VRTX': 'Vertex Pharmaceuticals Inc.',
+        'VTR': 'Ventas Inc.',
+        'VTRS': 'Viatris Inc.',
+        'VZ': 'Verizon Communications Inc.',
+        
+        # W-Z
+        'WAB': 'Westinghouse Air Brake Technologies Corp.',
+        'WAT': 'Waters Corp.',
+        'WBA': 'Walgreens Boots Alliance Inc.',
+        'WBD': 'Warner Bros. Discovery Inc.',
+        'WDC': 'Western Digital Corp.',
+        'WEC': 'WEC Energy Group Inc.',
+        'WELL': 'Welltower Inc.',
+        'WFC': 'Wells Fargo & Co.',
+        'WHR': 'Whirlpool Corp.',
+        'WM': 'Waste Management Inc.',
+        'WMB': 'Williams Cos. Inc.',
+        'WMT': 'Walmart Inc.',
+        'WRB': 'W.R. Berkley Corp.',
+        'WRK': 'WestRock Co.',
+        'WST': 'West Pharmaceutical Services Inc.',
+        'WTW': 'Willis Towers Watson PLC',
+        'WY': 'Weyerhaeuser Co.',
+        'XRAY': 'DENTSPLY SIRONA Inc.',
+        'XYL': 'Xylem Inc.',
+        'YUM': 'Yum! Brands Inc.',
+        'ZBH': 'Zimmer Biomet Holdings Inc.',
+        'ZBRA': 'Zebra Technologies Corp.',
+        'ZION': 'Zions Bancorp NA',
+        'ZTS': 'Zoetis Inc.'
+    }
+
+def create_user_friendly_stock_selection(unique_symbols):
+    """User-friendly stock selection with multiple pathways"""
+    
+    # Get the complete symbol-to-name mapping
+    symbol_to_name = get_complete_symbol_name_mapping()
+    
+    st.markdown("### 📈 Choose Your Stocks")
+    
+    # Method 1: Quick Popular Picks
+    st.markdown("**🔥 Quick Start (Popular Stocks)**")
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        if st.button("🍎 Big Tech", key="big_tech"):
+            return ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'NFLX']
+    
+    with col2:
+        if st.button("🏦 Major Banks", key="banks"):
+            return ['JPM', 'BAC', 'WFC', 'C', 'GS', 'MS', 'USB', 'PNC']
+    
+    with col3:
+        if st.button("⚡ AI & Semiconductors", key="ai_chips"):
+            return ['NVDA', 'AMD', 'INTC', 'QCOM', 'AVGO', 'MRVL', 'AMAT', 'LRCX']
+    
+    with col4:
+        if st.button("💊 Healthcare Giants", key="healthcare"):
+            return ['UNH', 'JNJ', 'PFE', 'ABBV', 'MRK', 'TMO', 'ABT', 'LLY']
+    
+    # Second row of quick picks
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        if st.button("🛒 Consumer Favorites", key="consumer"):
+            return ['WMT', 'COST', 'HD', 'TGT', 'NKE', 'SBUX', 'MCD', 'KO']
+    
+    with col2:
+        if st.button("⚡ Energy & Utilities", key="energy"):
+            return ['XOM', 'CVX', 'COP', 'EOG', 'NEE', 'DUK', 'SO', 'AEP']
+    
+    with col3:
+        if st.button("🏭 Industrial Leaders", key="industrial"):
+            return ['BA', 'CAT', 'GE', 'HON', 'MMM', 'UPS', 'FDX', 'RTX']
+    
+    with col4:
+        if st.button("💰 Dividend Champions", key="dividend"):
+            return ['JNJ', 'PG', 'KO', 'PEP', 'MCD', 'WMT', 'VZ', 'T']
+    
+    st.markdown("---")
+    
+    # Method 2: Search by Company Name
+    st.markdown("**🔍 Search by Company Name**")
+    
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        search_term = st.text_input(
+            "Type company name or ticker", 
+            placeholder="e.g., 'Apple', 'Microsoft', 'AAPL'",
+            help="Search for companies by name or ticker symbol"
+        )
+    
+    with col2:
+        st.markdown("<br>", unsafe_allow_html=True)  # Add spacing
+        if st.button("🔍 Search", key="search_btn"):
+            pass  # The search happens automatically below
+    
+    # Show search results
+    if search_term and len(search_term) >= 2:
+        search_lower = search_term.lower()
+        
+        # Search both ticker symbols and company names
+        matching_symbols = []
+        for symbol in unique_symbols:
+            company_name = symbol_to_name.get(symbol, symbol)
+            if (search_lower in symbol.lower() or 
+                search_lower in company_name.lower()):
+                matching_symbols.append(symbol)
+        
+        if matching_symbols:
+            # Limit to top 20 matches to avoid overwhelming UI
+            matching_symbols = matching_symbols[:20]
+            
+            st.markdown(f"**Found {len(matching_symbols)} matches:**")
+            
+            # Create display options with company names
+            display_options = []
+            for sym in matching_symbols:
+                company_name = symbol_to_name.get(sym, sym)
+                display_options.append(f"{sym} - {company_name}")
+            
+            selected_display = st.multiselect(
+                "Select from search results:",
+                display_options,
+                help="Choose the companies you want to analyze"
+            )
+            
+            if selected_display:
+                selected_symbols = [opt.split(' - ')[0] for opt in selected_display]
+                
+                if st.button("✅ Analyze Selected", key="analyze_search"):
+                    return selected_symbols
+                
+                # Show preview of selected stocks
+                if selected_symbols:
+                    st.info(f"📊 Ready to analyze: {', '.join(selected_symbols)}")
+        else:
+            st.warning("No companies found matching your search. Try different keywords.")
+    
+    st.markdown("---")
+    
+    # Method 3: Browse by Sector (Enhanced)
+    st.markdown("**🏢 Browse by Industry Sector**")
+    
+    sector_mapping = get_sector_mapping()
+    
+    # Sector selection with better UX
+    col1, col2 = st.columns([2, 2])
+    
+    with col1:
+        selected_sectors = st.multiselect(
+            "Choose industry sectors:",
+            options=list(sector_mapping.keys()),
+            default=['Technology', 'Financial Services'],  # Popular defaults
+            help="Filter stocks by industry sector"
+        )
+    
+    with col2:
+        sector_action_col1, sector_action_col2 = st.columns(2)
+        with sector_action_col1:
+            if st.button("🏢 All Sectors", key="all_sectors"):
+                selected_sectors = list(sector_mapping.keys())
+                st.rerun()
+        
+        with sector_action_col2:
+            if st.button("🎯 Popular Only", key="popular_sectors"):
+                selected_sectors = ['Technology', 'Financial Services', 'Healthcare']
+                st.rerun()
+    
+    # Get filtered symbols based on selected sectors
+    if selected_sectors:
+        filtered_symbols = []
+        for sector in selected_sectors:
+            if sector in sector_mapping:
+                filtered_symbols.extend(sector_mapping[sector])
+        
+        # Remove duplicates and filter to only available symbols
+        filtered_symbols = list(set(filtered_symbols))
+        available_symbols = [sym for sym in filtered_symbols if sym in unique_symbols]
+        available_symbols.sort()
+        
+        if available_symbols:
+            # Create display options with company names for sector browsing
+            sector_display_options = []
+            for sym in available_symbols:
+                company_name = symbol_to_name.get(sym, sym)
+                # Truncate long company names for better display
+                if len(company_name) > 40:
+                    company_name = company_name[:37] + "..."
+                sector_display_options.append(f"{sym} - {company_name}")
+            
+            selected_display = st.multiselect(
+                f"Select from {len(available_symbols)} stocks in chosen sectors:",
+                sector_display_options,
+                default=sector_display_options[:6],  # Select first 6 by default
+                help="Choose specific stocks from the filtered sectors"
+            )
+            
+            if selected_display:
+                selected_symbols = [opt.split(' - ')[0] for opt in selected_display]
+                
+                # Show selection summary
+                st.success(f"✅ Selected {len(selected_symbols)} stocks from {len(selected_sectors)} sectors")
+                
+                return selected_symbols
+        else:
+            st.warning("No stocks found in selected sectors.")
+    
+    # Fallback: return empty list if no selection made
+    return []
+
 def main():
     create_header()
     
@@ -1005,7 +1719,7 @@ def main():
     st.markdown('<div class="section-header"><span class="section-icon">🎯</span><h2>Stock Selection</h2></div>', unsafe_allow_html=True)
 
     unique_symbols = sorted(df['symbol'].unique())
-    selected_symbols = create_enhanced_stock_selection(unique_symbols)
+    selected_symbols = create_user_friendly_stock_selection(unique_symbols)
     
     # Filter data based on selection
     filtered_df = df[df['symbol'].isin(selected_symbols)] if selected_symbols else df
