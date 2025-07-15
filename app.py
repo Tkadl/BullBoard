@@ -1004,11 +1004,11 @@ def main():
    # Stock Selection section
 st.markdown('<div class="section-header"><span class="section-icon">🎯</span><h2>Stock Selection</h2></div>', unsafe_allow_html=True)
 
-unique_symbols = sorted(df['symbol'].unique())
-selected_symbols = create_enhanced_stock_selection(unique_symbols)
+    unique_symbols = sorted(df['symbol'].unique())
+    selected_symbols = create_enhanced_stock_selection(unique_symbols)
     
-# Filter data based on selection
-filtered_df = df[df['symbol'].isin(selected_symbols)] if selected_symbols else df
+    # Filter data based on selection
+    filtered_df = df[df['symbol'].isin(selected_symbols)] if selected_symbols else df
     
     # Date Range Selection
     if not filtered_df.empty:
@@ -1022,7 +1022,7 @@ filtered_df = df[df['symbol'].isin(selected_symbols)] if selected_symbols else d
             max_value=max_date
         )
         
-    if isinstance(date_range, tuple) and len(date_range) == 2:
+        if isinstance(date_range, tuple) and len(date_range) == 2:
             start_date, end_date = date_range
             filtered_df = filtered_df[
                 (filtered_df['Date'] >= pd.to_datetime(start_date)) &
