@@ -1015,7 +1015,7 @@ def get_complete_symbol_name_mapping():
         'BMY': 'Bristol-Myers Squibb Co.',
         'BR': 'Broadridge Financial Solutions Inc.',
         'BRK-B': 'Berkshire Hathaway Inc.',
-         'BRO': 'Brown & Brown Inc.',
+        'BRO': 'Brown & Brown Inc.',
         'BSX': 'Boston Scientific Corp.',
         'BWA': 'BorgWarner Inc.',
         
