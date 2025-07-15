@@ -858,6 +858,87 @@ def create_correlation_heatmap(filtered_df, selected_symbols):
     
     return fig
 
+def get_sector_mapping():
+    """Map stocks to sectors for better organization"""
+    return {
+        'Technology': ['AAPL', 'MSFT', 'GOOGL', 'GOOG', 'AMZN', 'NVDA', 'META', 'NFLX', 'ADBE', 'CRM', 'ORCL', 'CSCO', 'INTC', 'AMD', 'QCOM', 'TXN', 'AVGO', 'PYPL', 'UBER', 'SNOW'],
+        'Financial Services': ['JPM', 'BAC', 'WFC', 'GS', 'MS', 'C', 'USB', 'TFC', 'PNC', 'COF', 'AXP', 'BLK', 'SCHW', 'CB', 'ICE', 'CME', 'SPGI', 'MCO', 'V', 'MA'],
+        'Healthcare': ['UNH', 'JNJ', 'PFE', 'ABBV', 'TMO', 'ABT', 'LLY', 'MRK', 'BMY', 'AMGN', 'GILD', 'CVS', 'CI', 'ANTM', 'HUM', 'CNC', 'BIIB', 'REGN', 'VRTX', 'ISRG'],
+        'Consumer Discretionary': ['HD', 'NKE', 'MCD', 'LOW', 'SBUX', 'TJX', 'BKNG', 'MAR', 'GM', 'F', 'CCL', 'RCL', 'MGM', 'DIS', 'CMCSA'],
+        'Consumer Staples': ['WMT', 'PG', 'KO', 'PEP', 'COST', 'WBA', 'EL', 'CL', 'KMB', 'GIS', 'K', 'HSY', 'MDLZ'],
+        'Energy': ['XOM', 'CVX', 'COP', 'EOG', 'SLB', 'PSX', 'VLO', 'MPC', 'OXY', 'BKR'],
+        'Industrials': ['BA', 'CAT', 'HON', 'UPS', 'RTX', 'LMT', 'GE', 'MMM', 'FDX', 'NOC', 'UNP', 'CSX', 'NSC'],
+        'Materials': ['LIN', 'APD', 'ECL', 'FCX', 'NEM', 'DOW', 'DD', 'PPG', 'SHW', 'NUE'],
+        'Utilities': ['NEE', 'DUK', 'SO', 'D', 'EXC', 'XEL', 'SRE', 'AEP', 'ES', 'AWK'],
+        'Real Estate': ['AMT', 'CCI', 'PLD', 'EQIX', 'PSA', 'EXR', 'AVB', 'EQR', 'WELL', 'SPG']
+    }
+
+def create_enhanced_stock_selection(unique_symbols):
+    """Create enhanced stock selection with sector filtering"""
+    sector_mapping = get_sector_mapping()
+    
+    # Create reverse mapping for symbols not in defined sectors
+    symbol_to_sector = {}
+    for sector, symbols in sector_mapping.items():
+        for symbol in symbols:
+            symbol_to_sector[symbol] = sector
+    
+    # Add "Other" category for symbols not in predefined sectors
+    other_symbols = [sym for sym in unique_symbols if sym not in symbol_to_sector]
+    if other_symbols:
+        sector_mapping['Other'] = other_symbols
+        for sym in other_symbols:
+            symbol_to_sector[sym] = 'Other'
+    
+    # Sector filter UI
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        selected_sectors = st.multiselect(
+            "Filter by Sector",
+            options=list(sector_mapping.keys()),
+            default=['Technology', 'Financial Services', 'Healthcare'],  # Start with popular sectors
+            help="Select sectors to filter available stocks"
+        )
+    
+    with col2:
+        if st.button("🏢 All Sectors", key="select_all_sectors"):
+            selected_sectors = list(sector_mapping.keys())
+            st.rerun()
+    
+    # Get filtered symbols based on selected sectors
+    filtered_symbols = []
+    for sector in selected_sectors:
+        if sector in sector_mapping:
+            filtered_symbols.extend(sector_mapping[sector])
+    
+    # Remove duplicates and filter to only available symbols
+    filtered_symbols = list(set(filtered_symbols))
+    available_symbols = [sym for sym in filtered_symbols if sym in unique_symbols]
+    available_symbols.sort()
+    
+    # Stock selection
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        selected_symbols = st.multiselect(
+            "Choose stocks to analyze",
+            available_symbols,
+            default=available_symbols[:8] if len(available_symbols) >= 8 else available_symbols,
+            help="Select stocks for detailed analysis and comparison"
+        )
+    
+    with col2:
+        if st.button("📈 Select All", key="select_all_stocks"):
+            selected_symbols = available_symbols
+            st.rerun()
+    
+    # Show selection summary
+    if selected_symbols:
+        st.info(f"Selected {len(selected_symbols)} stocks from {len(selected_sectors)} sectors")
+    
+    return selected_symbols
+
 def main():
     create_header()
     
@@ -920,23 +1001,11 @@ def main():
     st.markdown("<br>", unsafe_allow_html=True)
     
     # Stock Selection
-    st.markdown('<div class="section-header"><span class="section-icon">🎯</span><h2>Stock Selection</h2></div>', unsafe_allow_html=True)
-    
-    unique_symbols = sorted(df['symbol'].unique())
-    
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        selected_symbols = st.multiselect(
-            "Choose stocks to analyze",
-            unique_symbols,
-            default=unique_symbols[:8] if len(unique_symbols) >= 8 else unique_symbols,
-            help="Select stocks for detailed analysis and comparison"
-        )
-    
-    with col2:
-        if st.button("📈 Select All", key="select_all"):
-            selected_symbols = unique_symbols
-            st.rerun()
+   # Stock Selection section
+st.markdown('<div class="section-header"><span class="section-icon">🎯</span><h2>Stock Selection</h2></div>', unsafe_allow_html=True)
+
+unique_symbols = sorted(df['symbol'].unique())
+selected_symbols = create_enhanced_stock_selection(unique_symbols)
     
     # Filter data based on selection
     filtered_df = df[df['symbol'].isin(selected_symbols)] if selected_symbols else df
