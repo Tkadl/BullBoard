@@ -6,6 +6,7 @@ import time  # Add this import
 
 def get_sp500_symbols():
     """Get complete S&P 500 symbols list"""
+    print("DEBUG: get_sp500_symbols() function called!")  # Add this line
     sp500_symbols = [
         'A', 'AAL', 'AAP', 'AAPL', 'ABBV', 'ABC', 'ABT', 'ACN', 'ADBE', 'ADI', 'ADM', 'ADP', 'ADSK', 'AEE', 'AEP', 'AES', 'AFL', 'AIG', 'AIZ', 'AJG', 'AKAM', 'ALB', 'ALGN', 'ALK', 'ALL', 'ALLE', 'AMAT', 'AMCR', 'AMD', 'AME', 'AMGN', 'AMP', 'AMT', 'AMZN', 'ANET', 'ANSS', 'AON', 'AOS', 'APA', 'APD', 'APH', 'APTV', 'ARE', 'ATO', 'AVB', 'AVGO', 'AVY', 'AWK', 'AXP', 'AZO',
         'BA', 'BAC', 'BALL', 'BAX', 'BBWI', 'BBY', 'BDX', 'BEN', 'BF-B', 'BIIB', 'BIO', 'BK', 'BKNG', 'BKR', 'BLK', 'BMY', 'BR', 'BRK-B', 'BRO', 'BSX', 'BWA',
@@ -35,6 +36,12 @@ def get_sp500_symbols():
 def main():
     # === USER CONFIGURATION ===
     tickers = get_sp500_symbols()  # Use dynamic S&P 500 list
+    
+    # DEBUG: Let's see what we're actually getting
+    print(f"DEBUG: Total tickers to fetch: {len(tickers)}")
+    print(f"DEBUG: First 10 tickers: {tickers[:10]}")
+    print(f"DEBUG: Last 10 tickers: {tickers[-10:]}")
+    
     start_date = "2024-01-01"
     end_date = datetime.today().strftime("%Y-%m-%d")
     min_days_needed = 65
