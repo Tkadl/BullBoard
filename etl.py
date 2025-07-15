@@ -157,120 +157,120 @@ def main():
     batch_size = 30  # Reduced batch size for better reliability with more symbols
     delay_between_batches = 2  # Add delay between batches
 
-   print(f"Checking for existing data and update requirements...")
+  print(f"Checking for existing data and update requirements...")
 
-# Check what data we already have
-existing_df, last_date, existing_symbols = get_last_update_info()
-can_do_incremental, reason = should_do_incremental_update(last_date, existing_symbols, tickers)
+    # Check what data we already have
+    existing_df, last_date, existing_symbols = get_last_update_info()
+    can_do_incremental, reason = should_do_incremental_update(last_date, existing_symbols, tickers)
 
-print(f"Update decision: {reason}")
+    print(f"Update decision: {reason}")
 
-if can_do_incremental:
-    print("=== PERFORMING INCREMENTAL UPDATE ===")
-    
-    # Fetch only new data
-    good_dfs, bad_tickers = fetch_incremental_data(
-        tickers, last_date, end_date, min_days_needed, batch_size, delay_between_batches
-    )
-    
-    print(f"Incremental fetch: {len(good_dfs)} symbols updated, {len(bad_tickers)} failed")
-    
-    if good_dfs:
-        # Combine new data
-        new_df = pd.concat(good_dfs, ignore_index=True)
-        new_df = new_df[['symbol', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
+    if can_do_incremental:
+        print("=== PERFORMING INCREMENTAL UPDATE ===")
         
-        # Add timestamp for new data
-        download_time = datetime.now()
-        new_df['download_time'] = download_time.strftime('%Y-%m-%d %H:%M')
+        # Fetch only new data
+        good_dfs, bad_tickers = fetch_incremental_data(
+            tickers, last_date, end_date, min_days_needed, batch_size, delay_between_batches
+        )
         
-        # Combine with existing data
-        df = pd.concat([existing_df, new_df], ignore_index=True)
+        print(f"Incremental fetch: {len(good_dfs)} symbols updated, {len(bad_tickers)} failed")
         
-        # Remove duplicates (in case of overlap)
-        df = df.drop_duplicates(subset=['symbol', 'Date'], keep='last')
-        df = df.sort_values(['symbol', 'Date']).reset_index(drop=True)
-        
-        print(f"Combined dataset: {len(df)} total records")
-    else:
-        print("No new data fetched - using existing data")
-        df = existing_df
-
-else:
-    print("=== PERFORMING FULL REFRESH ===")
-    
-    # Your existing full refresh code (keep exactly as is)
-    print(f"Fetching data for {len(tickers)} symbols...")
-    
-    good_dfs = []
-    bad_tickers = []
-
-    # Download data in batches with progress tracking
-    total_batches = (len(tickers) + batch_size - 1) // batch_size
-    
-    for batch_num, i in enumerate(range(0, len(tickers), batch_size), 1):
-        batch = tickers[i:i+batch_size]
-        print(f"Processing batch {batch_num}/{total_batches} ({len(batch)} symbols)...")
-        
-        try:
-            raw = yf.download(
-                tickers=" ".join(batch),
-                start=start_date,
-                end=end_date,
-                group_by='ticker',
-                auto_adjust=True,
-                progress=False,
-                threads=True
-            )
+        if good_dfs:
+            # Combine new data
+            new_df = pd.concat(good_dfs, ignore_index=True)
+            new_df = new_df[['symbol', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
             
-            if len(batch) == 1:
-                ticker = batch[0]
-                temp = raw.copy()
-                if temp.empty or len(temp) < min_days_needed:
-                    bad_tickers.append(ticker)
-                    continue
-                temp['symbol'] = ticker
-                temp['Date'] = temp.index
-                good_dfs.append(temp.reset_index(drop=True))
-            else:
-                for ticker in batch:
-                    try:
-                        temp = raw[ticker].copy()
-                        if temp.empty or len(temp) < min_days_needed:
-                            bad_tickers.append(ticker)
-                            continue
-                        temp['symbol'] = ticker
-                        temp['Date'] = temp.index
-                        good_dfs.append(temp.reset_index(drop=True))
-                    except KeyError:
+            # Add timestamp for new data
+            download_time = datetime.now()
+            new_df['download_time'] = download_time.strftime('%Y-%m-%d %H:%M')
+            
+            # Combine with existing data
+            df = pd.concat([existing_df, new_df], ignore_index=True)
+            
+            # Remove duplicates (in case of overlap)
+            df = df.drop_duplicates(subset=['symbol', 'Date'], keep='last')
+            df = df.sort_values(['symbol', 'Date']).reset_index(drop=True)
+            
+            print(f"Combined dataset: {len(df)} total records")
+        else:
+            print("No new data fetched - using existing data")
+            df = existing_df
+
+    else:
+        print("=== PERFORMING FULL REFRESH ===")
+        
+        # Your existing full refresh code (keep exactly as is)
+        print(f"Fetching data for {len(tickers)} symbols...")
+        
+        good_dfs = []
+        bad_tickers = []
+
+        # Download data in batches with progress tracking
+        total_batches = (len(tickers) + batch_size - 1) // batch_size
+        
+        for batch_num, i in enumerate(range(0, len(tickers), batch_size), 1):
+            batch = tickers[i:i+batch_size]
+            print(f"Processing batch {batch_num}/{total_batches} ({len(batch)} symbols)...")
+            
+            try:
+                raw = yf.download(
+                    tickers=" ".join(batch),
+                    start=start_date,
+                    end=end_date,
+                    group_by='ticker',
+                    auto_adjust=True,
+                    progress=False,
+                    threads=True
+                )
+                
+                if len(batch) == 1:
+                    ticker = batch[0]
+                    temp = raw.copy()
+                    if temp.empty or len(temp) < min_days_needed:
                         bad_tickers.append(ticker)
                         continue
-                        
-        except Exception as e:
-            print(f"Error in batch {batch_num}: {e}")
-            bad_tickers.extend(batch)
-            continue
-            
-        # Add delay between batches to be nice to the API
-        if delay_between_batches > 0:
-            time.sleep(delay_between_batches)
+                    temp['symbol'] = ticker
+                    temp['Date'] = temp.index
+                    good_dfs.append(temp.reset_index(drop=True))
+                else:
+                    for ticker in batch:
+                        try:
+                            temp = raw[ticker].copy()
+                            if temp.empty or len(temp) < min_days_needed:
+                                bad_tickers.append(ticker)
+                                continue
+                            temp['symbol'] = ticker
+                            temp['Date'] = temp.index
+                            good_dfs.append(temp.reset_index(drop=True))
+                        except KeyError:
+                            bad_tickers.append(ticker)
+                            continue
+                            
+            except Exception as e:
+                print(f"Error in batch {batch_num}: {e}")
+                bad_tickers.extend(batch)
+                continue
+                
+            # Add delay between batches to be nice to the API
+            if delay_between_batches > 0:
+                time.sleep(delay_between_batches)
 
-    print(f"Successfully fetched: {len(good_dfs)} symbols")
-    print(f"Failed to fetch: {len(bad_tickers)} symbols")
-    if bad_tickers:
-        print(f"Failed symbols: {bad_tickers[:10]}{'...' if len(bad_tickers) > 10 else ''}")
+        print(f"Successfully fetched: {len(good_dfs)} symbols")
+        print(f"Failed to fetch: {len(bad_tickers)} symbols")
+        if bad_tickers:
+            print(f"Failed symbols: {bad_tickers[:10]}{'...' if len(bad_tickers) > 10 else ''}")
 
-    # Rest of your existing code remains the same...
-    if good_dfs:
-        df = pd.concat(good_dfs, ignore_index=True)
-        df = df[['symbol', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
-    else:
-        print("No data fetched — check your internet connection and ticker list.")
-        return
+        # Rest of your existing code remains the same...
+        if good_dfs:
+            df = pd.concat(good_dfs, ignore_index=True)
+            df = df[['symbol', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
+        else:
+            print("No data fetched — check your internet connection and ticker list.")
+            return
 
-    # TIMESTAMP DATA DOWNLOAD
-    download_time = datetime.now()
-    df['download_time'] = download_time.strftime('%Y-%m-%d %H:%M')
+        # TIMESTAMP DATA DOWNLOAD
+        download_time = datetime.now()
+        df['download_time'] = download_time.strftime('%Y-%m-%d %H:%M')
 
     # DATA VALIDATION BEFORE CALC
     bad_symbols = []
