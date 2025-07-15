@@ -1034,7 +1034,7 @@ if filtered_df.empty:
         st.stop()
     
     # Generate summary statistics
-    summary = (
+summary = (
         filtered_df
         .groupby("symbol")
         .agg(
