@@ -1487,171 +1487,171 @@ def create_user_friendly_stock_selection(unique_symbols):
     
     with col1:
         if st.button("🍎 Big Tech", key="big_tech"):
-            return ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'NFLX']
+            st.session_state.selected_symbols = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA', 'NFLX']
+            st.rerun()
     
     with col2:
         if st.button("🏦 Major Banks", key="banks"):
-            return ['JPM', 'BAC', 'WFC', 'C', 'GS', 'MS', 'USB', 'PNC']
+            st.session_state.selected_symbols = ['JPM', 'BAC', 'WFC', 'C', 'GS', 'MS', 'USB', 'PNC']
+            st.rerun()
     
     with col3:
         if st.button("⚡ AI & Semiconductors", key="ai_chips"):
-            return ['NVDA', 'AMD', 'INTC', 'QCOM', 'AVGO', 'MRVL', 'AMAT', 'LRCX']
+            st.session_state.selected_symbols = ['NVDA', 'AMD', 'INTC', 'QCOM', 'AVGO', 'AMAT', 'LRCX', 'KLAC']
+            st.rerun()
     
     with col4:
         if st.button("💊 Healthcare Giants", key="healthcare"):
-            return ['UNH', 'JNJ', 'PFE', 'ABBV', 'MRK', 'TMO', 'ABT', 'LLY']
+            st.session_state.selected_symbols = ['UNH', 'JNJ', 'PFE', 'ABBV', 'MRK', 'TMO', 'ABT', 'LLY']
+            st.rerun()
     
     # Second row of quick picks
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         if st.button("🛒 Consumer Favorites", key="consumer"):
-            return ['WMT', 'COST', 'HD', 'TGT', 'NKE', 'SBUX', 'MCD', 'KO']
+            st.session_state.selected_symbols = ['WMT', 'COST', 'HD', 'TGT', 'NKE', 'SBUX', 'MCD', 'KO']
+            st.rerun()
     
     with col2:
         if st.button("⚡ Energy & Utilities", key="energy"):
-            return ['XOM', 'CVX', 'COP', 'EOG', 'NEE', 'DUK', 'SO', 'AEP']
+            st.session_state.selected_symbols = ['XOM', 'CVX', 'COP', 'EOG', 'NEE', 'DUK', 'SO', 'AEP']
+            st.rerun()
     
     with col3:
         if st.button("🏭 Industrial Leaders", key="industrial"):
-            return ['BA', 'CAT', 'GE', 'HON', 'MMM', 'UPS', 'FDX', 'RTX']
+            st.session_state.selected_symbols = ['BA', 'CAT', 'GE', 'HON', 'MMM', 'UPS', 'FDX', 'RTX']
+            st.rerun()
     
     with col4:
         if st.button("💰 Dividend Champions", key="dividend"):
-            return ['JNJ', 'PG', 'KO', 'PEP', 'MCD', 'WMT', 'VZ', 'T']
+            st.session_state.selected_symbols = ['JNJ', 'PG', 'KO', 'PEP', 'MCD', 'WMT', 'VZ', 'T']
+            st.rerun()
     
     st.markdown("---")
     
     # Method 2: Search by Company Name
     st.markdown("**🔍 Search by Company Name**")
     
-    col1, col2 = st.columns([3, 1])
+    search_term = st.text_input(
+        "Type company name or ticker", 
+        placeholder="e.g., 'Apple', 'Microsoft', 'AAPL'",
+        help="Search for companies by name or ticker symbol"
+    )
     
-    with col1:
-        search_term = st.text_input(
-            "Type company name or ticker", 
-            placeholder="e.g., 'Apple', 'Microsoft', 'AAPL'",
-            help="Search for companies by name or ticker symbol"
-        )
-    
-    with col2:
-        st.markdown("<br>", unsafe_allow_html=True)  # Add spacing
-        if st.button("🔍 Search", key="search_btn"):
-            pass  # The search happens automatically below
-    
-    # Show search results
+    search_results = []
     if search_term and len(search_term) >= 2:
         search_lower = search_term.lower()
         
         # Search both ticker symbols and company names
-        matching_symbols = []
         for symbol in unique_symbols:
             company_name = symbol_to_name.get(symbol, symbol)
             if (search_lower in symbol.lower() or 
                 search_lower in company_name.lower()):
-                matching_symbols.append(symbol)
+                search_results.append(symbol)
         
-        if matching_symbols:
-            # Limit to top 20 matches to avoid overwhelming UI
-            matching_symbols = matching_symbols[:20]
-            
-            st.markdown(f"**Found {len(matching_symbols)} matches:**")
+        # Limit to top 20 matches
+        search_results = search_results[:20]
+        
+        if search_results:
+            st.markdown(f"**Found {len(search_results)} matches:**")
             
             # Create display options with company names
             display_options = []
-            for sym in matching_symbols:
+            for sym in search_results:
                 company_name = symbol_to_name.get(sym, sym)
+                if len(company_name) > 50:
+                    company_name = company_name[:47] + "..."
                 display_options.append(f"{sym} - {company_name}")
             
-            selected_display = st.multiselect(
+            search_selection = st.multiselect(
                 "Select from search results:",
                 display_options,
-                help="Choose the companies you want to analyze"
+                key="search_selection"
             )
             
-            if selected_display:
-                selected_symbols = [opt.split(' - ')[0] for opt in selected_display]
-                
-                if st.button("✅ Analyze Selected", key="analyze_search"):
-                    return selected_symbols
-                
-                # Show preview of selected stocks
-                if selected_symbols:
-                    st.info(f"📊 Ready to analyze: {', '.join(selected_symbols)}")
+            if search_selection:
+                if st.button("✅ Use Search Results", key="use_search"):
+                    selected_from_search = [opt.split(' - ')[0] for opt in search_selection]
+                    st.session_state.selected_symbols = selected_from_search
+                    st.rerun()
         else:
-            st.warning("No companies found matching your search. Try different keywords.")
+            st.warning("No companies found matching your search.")
     
     st.markdown("---")
     
-    # Method 3: Browse by Sector (Enhanced)
-    st.markdown("**🏢 Browse by Industry Sector**")
+    # Method 3: Manual Selection with Sector Filtering
+    st.markdown("**🏢 Manual Selection**")
     
+    # Get sector mapping
     sector_mapping = get_sector_mapping()
     
-    # Sector selection with better UX
-    col1, col2 = st.columns([2, 2])
+    # Add "Other" category for symbols not in predefined sectors
+    symbol_to_sector = {}
+    for sector, symbols in sector_mapping.items():
+        for symbol in symbols:
+            symbol_to_sector[symbol] = sector
     
-    with col1:
-        selected_sectors = st.multiselect(
-            "Choose industry sectors:",
-            options=list(sector_mapping.keys()),
-            default=['Technology', 'Financial Services'],  # Popular defaults
-            help="Filter stocks by industry sector"
-        )
+    other_symbols = [sym for sym in unique_symbols if sym not in symbol_to_sector]
+    if other_symbols:
+        sector_mapping['Other'] = other_symbols
     
-    with col2:
-        sector_action_col1, sector_action_col2 = st.columns(2)
-        with sector_action_col1:
-            if st.button("🏢 All Sectors", key="all_sectors"):
-                selected_sectors = list(sector_mapping.keys())
-                st.rerun()
-        
-        with sector_action_col2:
-            if st.button("🎯 Popular Only", key="popular_sectors"):
-                selected_sectors = ['Technology', 'Financial Services', 'Healthcare']
-                st.rerun()
+    # Sector filter
+    selected_sectors = st.multiselect(
+        "Filter by Sector (optional):",
+        options=list(sector_mapping.keys()),
+        default=['Technology', 'Financial Services'],
+        help="Choose sectors to filter available stocks"
+    )
     
-    # Get filtered symbols based on selected sectors
+    # Get symbols from selected sectors
     if selected_sectors:
         filtered_symbols = []
         for sector in selected_sectors:
             if sector in sector_mapping:
                 filtered_symbols.extend(sector_mapping[sector])
         
-        # Remove duplicates and filter to only available symbols
-        filtered_symbols = list(set(filtered_symbols))
-        available_symbols = [sym for sym in filtered_symbols if sym in unique_symbols]
+        # Remove duplicates and ensure symbols exist in our data
+        available_symbols = list(set([sym for sym in filtered_symbols if sym in unique_symbols]))
         available_symbols.sort()
-        
-        if available_symbols:
-            # Create display options with company names for sector browsing
-            sector_display_options = []
-            for sym in available_symbols:
-                company_name = symbol_to_name.get(sym, sym)
-                # Truncate long company names for better display
-                if len(company_name) > 40:
-                    company_name = company_name[:37] + "..."
-                sector_display_options.append(f"{sym} - {company_name}")
-            
-            selected_display = st.multiselect(
-                f"Select from {len(available_symbols)} stocks in chosen sectors:",
-                sector_display_options,
-                default=sector_display_options[:6],  # Select first 6 by default
-                help="Choose specific stocks from the filtered sectors"
-            )
-            
-            if selected_display:
-                selected_symbols = [opt.split(' - ')[0] for opt in selected_display]
-                
-                # Show selection summary
-                st.success(f"✅ Selected {len(selected_symbols)} stocks from {len(selected_sectors)} sectors")
-                
-                return selected_symbols
-        else:
-            st.warning("No stocks found in selected sectors.")
+    else:
+        available_symbols = sorted(unique_symbols)
     
-    # Fallback: return empty list if no selection made
-    return []
+    if available_symbols:
+        # Create display options with company names
+        display_options = []
+        for sym in available_symbols:
+            company_name = symbol_to_name.get(sym, sym)
+            if len(company_name) > 40:
+                company_name = company_name[:37] + "..."
+            display_options.append(f"{sym} - {company_name}")
+        
+        manual_selection = st.multiselect(
+            f"Choose from {len(available_symbols)} available stocks:",
+            display_options,
+            default=display_options[:6] if len(display_options) >= 6 else display_options,
+            key="manual_selection"
+        )
+        
+        if manual_selection:
+            selected_symbols = [opt.split(' - ')[0] for opt in manual_selection]
+        else:
+            selected_symbols = []
+    else:
+        selected_symbols = []
+        st.warning("No stocks available in selected sectors.")
+    
+    # Return selected symbols from session state if available, otherwise from manual selection
+    if 'selected_symbols' in st.session_state:
+        final_selection = st.session_state.selected_symbols
+        # Clear session state to avoid persistence issues
+        if st.button("🔄 Clear Selection", key="clear_selection"):
+            del st.session_state.selected_symbols
+            st.rerun()
+    else:
+        final_selection = selected_symbols
+    
+    return final_selection
 
 def main():
     create_header()
