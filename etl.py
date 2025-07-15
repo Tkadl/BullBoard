@@ -4,6 +4,108 @@ import numpy as np
 from datetime import datetime
 import time  # Add this import
 
+def get_last_update_info():
+    """Check existing data and determine what needs updating"""
+    try:
+        existing_df = pd.read_csv("latest_results.csv", parse_dates=["Date"])
+        if existing_df.empty:
+            return None, None, []
+        
+        last_date = existing_df['Date'].max().strftime("%Y-%m-%d")
+        existing_symbols = existing_df['symbol'].unique().tolist()
+        return existing_df, last_date, existing_symbols
+    except FileNotFoundError:
+        print("No existing data file found - will perform full refresh")
+        return None, None, []
+
+def should_do_incremental_update(last_date, existing_symbols, current_tickers):
+    """Determine if incremental update is possible and beneficial"""
+    if last_date is None:
+        return False, "No existing data"
+    
+    # Check if last update was today (no new data to fetch)
+    last_update = datetime.strptime(last_date, "%Y-%m-%d")
+    today = datetime.now().date()
+    
+    if last_update.date() >= today:
+        return False, "Data already up to date"
+    
+    # Check if it's been more than 5 days (probably better to do full refresh)
+    days_since_update = (datetime.now() - last_update).days
+    if days_since_update > 5:
+        return False, f"Data is {days_since_update} days old - full refresh recommended"
+    
+    # Check if ticker list has changed significantly
+    symbol_diff = set(current_tickers) - set(existing_symbols)
+    if len(symbol_diff) > 20:
+        return False, f"Many new symbols detected: {len(symbol_diff)}"
+    
+    return True, f"Will fetch {days_since_update} day(s) of new data"
+
+def fetch_incremental_data(tickers, last_date, end_date, min_days_needed, batch_size=30, delay_between_batches=2):
+    """Fetch only new data since last_date"""
+    from datetime import datetime, timedelta
+    
+    # Calculate start date (day after last_date)
+    last_update = datetime.strptime(last_date, "%Y-%m-%d")
+    incremental_start = (last_update + timedelta(days=1)).strftime("%Y-%m-%d")
+    
+    print(f"Fetching incremental data from {incremental_start} to {end_date}")
+    
+    good_dfs = []
+    bad_tickers = []
+    
+    # Use same batch processing logic as your current code
+    total_batches = (len(tickers) + batch_size - 1) // batch_size
+    
+    for batch_num, i in enumerate(range(0, len(tickers), batch_size), 1):
+        batch = tickers[i:i+batch_size]
+        print(f"Processing incremental batch {batch_num}/{total_batches} ({len(batch)} symbols)...")
+        
+        try:
+            raw = yf.download(
+                tickers=" ".join(batch),
+                start=incremental_start,
+                end=end_date,
+                group_by='ticker',
+                auto_adjust=True,
+                progress=False,
+                threads=True
+            )
+            
+            if len(batch) == 1:
+                ticker = batch[0]
+                temp = raw.copy()
+                if temp.empty:
+                    bad_tickers.append(ticker)
+                    continue
+                temp['symbol'] = ticker
+                temp['Date'] = temp.index
+                good_dfs.append(temp.reset_index(drop=True))
+            else:
+                for ticker in batch:
+                    try:
+                        temp = raw[ticker].copy()
+                        if temp.empty:
+                            bad_tickers.append(ticker)
+                            continue
+                        temp['symbol'] = ticker
+                        temp['Date'] = temp.index
+                        good_dfs.append(temp.reset_index(drop=True))
+                    except KeyError:
+                        bad_tickers.append(ticker)
+                        continue
+                        
+        except Exception as e:
+            print(f"Error in batch {batch_num}: {e}")
+            bad_tickers.extend(batch)
+            continue
+            
+        if delay_between_batches > 0:
+            time.sleep(delay_between_batches)
+    
+    return good_dfs, bad_tickers
+
 def get_sp500_symbols():
     """Get complete S&P 500 symbols list"""
     print("DEBUG: get_sp500_symbols() function called!")  # Add this line
@@ -55,6 +157,49 @@ def main():
     batch_size = 30  # Reduced batch size for better reliability with more symbols
     delay_between_batches = 2  # Add delay between batches
 
+   print(f"Checking for existing data and update requirements...")
+
+# Check what data we already have
+existing_df, last_date, existing_symbols = get_last_update_info()
+can_do_incremental, reason = should_do_incremental_update(last_date, existing_symbols, tickers)
+
+print(f"Update decision: {reason}")
+
+if can_do_incremental:
+    print("=== PERFORMING INCREMENTAL UPDATE ===")
+    
+    # Fetch only new data
+    good_dfs, bad_tickers = fetch_incremental_data(
+        tickers, last_date, end_date, min_days_needed, batch_size, delay_between_batches
+    )
+    
+    print(f"Incremental fetch: {len(good_dfs)} symbols updated, {len(bad_tickers)} failed")
+    
+    if good_dfs:
+        # Combine new data
+        new_df = pd.concat(good_dfs, ignore_index=True)
+        new_df = new_df[['symbol', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
+        
+        # Add timestamp for new data
+        download_time = datetime.now()
+        new_df['download_time'] = download_time.strftime('%Y-%m-%d %H:%M')
+        
+        # Combine with existing data
+        df = pd.concat([existing_df, new_df], ignore_index=True)
+        
+        # Remove duplicates (in case of overlap)
+        df = df.drop_duplicates(subset=['symbol', 'Date'], keep='last')
+        df = df.sort_values(['symbol', 'Date']).reset_index(drop=True)
+        
+        print(f"Combined dataset: {len(df)} total records")
+    else:
+        print("No new data fetched - using existing data")
+        df = existing_df
+
+else:
+    print("=== PERFORMING FULL REFRESH ===")
+    
+    # Your existing full refresh code (keep exactly as is)
     print(f"Fetching data for {len(tickers)} symbols...")
     
     good_dfs = []
@@ -97,16 +242,17 @@ def main():
                         temp['symbol'] = ticker
                         temp['Date'] = temp.index
                         good_dfs.append(temp.reset_index(drop=True))
-                    except Exception as e:
-                        print(f"Error processing {ticker}: {str(e)}")
+                    except KeyError:
                         bad_tickers.append(ticker)
+                        continue
                         
         except Exception as e:
-            print(f"Error with batch {batch_num}: {str(e)}")
+            print(f"Error in batch {batch_num}: {e}")
             bad_tickers.extend(batch)
-        
-        # Add delay between batches to be respectful to the API
-        if batch_num < total_batches:
+            continue
+            
+        # Add delay between batches to be nice to the API
+        if delay_between_batches > 0:
             time.sleep(delay_between_batches)
 
     print(f"Successfully fetched: {len(good_dfs)} symbols")
