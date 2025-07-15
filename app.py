@@ -1002,7 +1002,7 @@ def main():
     
     # Stock Selection
    # Stock Selection section
-st.markdown('<div class="section-header"><span class="section-icon">🎯</span><h2>Stock Selection</h2></div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header"><span class="section-icon">🎯</span><h2>Stock Selection</h2></div>', unsafe_allow_html=True)
 
     unique_symbols = sorted(df['symbol'].unique())
     selected_symbols = create_enhanced_stock_selection(unique_symbols)
