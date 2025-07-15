@@ -701,35 +701,35 @@ def generate_portfolio_optimization_insights(summary_data):
 
 def create_risk_return_scatter(summary):
     """Create interactive risk vs return scatter plot"""
+    
+    # Remove rows with NaN values that cause plotting issues
+    clean_summary = summary.dropna(subset=['avg_custom_risk_score', 'avg_rolling_yield_21', 'total_return'])
+    
+    if clean_summary.empty:
+        st.warning("No valid data available for risk-return analysis.")
+        return None
+    
     fig = px.scatter(
-        summary, 
-        x='avg_custom_risk_score', 
+        clean_summary,
+        x='avg_custom_risk_score',
         y='avg_rolling_yield_21',
-        size='avg_close',
-        color='avg_sharpe_21',
+        size=abs(clean_summary['total_return']) + 0.01,  # Ensure no zero/negative sizes
+        color='total_return',
         hover_name='symbol',
-        color_continuous_scale='RdYlGn',
         title="Risk vs Return Analysis",
-        size_max=20
+        labels={
+            'avg_custom_risk_score': 'Risk Score',
+            'avg_rolling_yield_21': 'Average Return',
+            'total_return': 'Total Return'
+        },
+        color_continuous_scale='RdYlGn'
     )
     
     fig.update_layout(
-        title={
-            'text': "Risk vs Return Analysis",
-            'x': 0.5,
-            'xanchor': 'center',
-            'font': {'size': 20, 'family': 'Inter'}
-        },
-        xaxis_title="Risk Score",
-        yaxis_title="Expected Return",
-        font=dict(family="Inter", size=12),
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)',
-        height=500
+        title_font_size=16,
+        height=500,
+        showlegend=True
     )
-    
-    fig.update_xaxes(gridcolor='lightgray', gridwidth=0.5)
-    fig.update_yaxes(gridcolor='lightgray', gridwidth=0.5)
     
     return fig
 
