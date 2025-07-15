@@ -1007,11 +1007,11 @@ st.markdown('<div class="section-header"><span class="section-icon">🎯</span><
 unique_symbols = sorted(df['symbol'].unique())
 selected_symbols = create_enhanced_stock_selection(unique_symbols)
     
-    # Filter data based on selection
-    filtered_df = df[df['symbol'].isin(selected_symbols)] if selected_symbols else df
+# Filter data based on selection
+filtered_df = df[df['symbol'].isin(selected_symbols)] if selected_symbols else df
     
-    # Date Range Selection
-    if not filtered_df.empty:
+# Date Range Selection
+if not filtered_df.empty:
         min_date = filtered_df['Date'].min().date()
         max_date = filtered_df['Date'].max().date()
         
