@@ -1475,7 +1475,7 @@ def get_complete_symbol_name_mapping():
 def create_user_friendly_stock_selection(unique_symbols):
     """Unified stock selection with persistent basket"""
     
-    # Initialize session state for selection basket
+ # Initialize session state for selection basket
     if 'stock_basket' not in st.session_state:
         st.session_state.stock_basket = []
     
