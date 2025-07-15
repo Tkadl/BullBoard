@@ -157,7 +157,7 @@ def main():
     batch_size = 30  # Reduced batch size for better reliability with more symbols
     delay_between_batches = 2  # Add delay between batches
 
-  print(f"Checking for existing data and update requirements...")
+ print(f"Checking for existing data and update requirements...")
 
     # Check what data we already have
     existing_df, last_date, existing_symbols = get_last_update_info()
@@ -199,7 +199,6 @@ def main():
     else:
         print("=== PERFORMING FULL REFRESH ===")
         
-        # Your existing full refresh code (keep exactly as is)
         print(f"Fetching data for {len(tickers)} symbols...")
         
         good_dfs = []
@@ -251,7 +250,6 @@ def main():
                 bad_tickers.extend(batch)
                 continue
                 
-            # Add delay between batches to be nice to the API
             if delay_between_batches > 0:
                 time.sleep(delay_between_batches)
 
@@ -260,7 +258,6 @@ def main():
         if bad_tickers:
             print(f"Failed symbols: {bad_tickers[:10]}{'...' if len(bad_tickers) > 10 else ''}")
 
-        # Rest of your existing code remains the same...
         if good_dfs:
             df = pd.concat(good_dfs, ignore_index=True)
             df = df[['symbol', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
