@@ -12,8 +12,7 @@ def get_sp500_symbols():
         'ADI', 'ADM', 'ADP', 'ADSK', 'AEE', 'AEP', 'AES', 'AFL', 'AIG', 'AIZ', 
         'AJG', 'AKAM', 'ALB', 'ALGN', 'ALK', 'ALL', 'ALLE', 'AMAT', 'AMCR', 'AMD', 
         'AME', 'AMGN', 'AMP', 'AMT', 'AMZN', 'ANET', 'ANSS', 'AON', 'AOS', 'APA', 
-        'APD', 'APH', 'APTV', 'ARE', 'ATO', 'ATVI', 'AVB', 'AVGO', 'AVY', 'AWK', 
-        'AXP', 'AZO',
+        'APD', 'APH', 'APTV', 'ARE', 'ATO', 'AVB', 'AVGO', 'AVY', 'AWK', 'AXP', 'AZO',
         
         # B
         'BA', 'BAC', 'BALL', 'BAX', 'BBWI', 'BBY', 'BDX', 'BEN', 'BF-B', 'BIIB', 
@@ -36,7 +35,7 @@ def get_sp500_symbols():
         'EXC', 'EXPD', 'EXPE', 'EXR',
         
         # F
-        'F', 'FANG', 'FAST', 'FB', 'FBHS', 'FCX', 'FDS', 'FDX', 'FE', 'FFIV', 'FIS', 
+        'F', 'FANG', 'FAST', 'FBHS', 'FCX', 'FDS', 'FDX', 'FE', 'FFIV', 'FIS', 
         'FISV', 'FITB', 'FLT', 'FMC', 'FOX', 'FOXA', 'FRC', 'FRT', 'FTNT', 'FTV',
         
         # G
@@ -77,7 +76,7 @@ def get_sp500_symbols():
         'PG', 'PGR', 'PH', 'PHM', 'PKG', 'PKI', 'PLD', 'PM', 'PNC', 'PNR', 'PNW', 
         'POOL', 'PPG', 'PPL', 'PRU', 'PSA', 'PSX', 'PTC', 'PVH', 'PWR', 'PXD', 'PYPL',
         
-        # Q
+        # Q-R
         'QCOM', 'QRVO', 'RCL', 'RE', 'REG', 'REGN', 'RF', 'RHI', 'RJF', 'RL', 'RMD', 
         'ROK', 'ROL', 'ROP', 'ROST', 'RSG', 'RTX',
         
@@ -89,22 +88,20 @@ def get_sp500_symbols():
         # T
         'T', 'TAP', 'TDG', 'TDY', 'TECH', 'TEL', 'TER', 'TFC', 'TFX', 'TGT', 'TJX', 
         'TMO', 'TMUS', 'TPG', 'TPR', 'TRMB', 'TROW', 'TRV', 'TSCO', 'TSLA', 'TSN', 
-        'TT', 'TTWO', 'TWTR', 'TXN', 'TXT', 'TYL',
+        'TT', 'TTWO', 'TXN', 'TXT', 'TYL',
         
-        # U
+        # U-V
         'UAL', 'UDR', 'UHS', 'ULTA', 'UNH', 'UNP', 'UPS', 'URI', 'USB', 'V', 'VFC', 
         'VLO', 'VMC', 'VNO', 'VRSK', 'VRSN', 'VRTX', 'VTR', 'VTRS', 'VZ',
         
-        # W
+        # W-Z
         'WAB', 'WAT', 'WBA', 'WBD', 'WDC', 'WEC', 'WELL', 'WFC', 'WHR', 'WM', 'WMB', 
-        'WMT', 'WRB', 'WRK', 'WST', 'WTW', 'WY',
-        
-        # X-Z
-        'XRAY', 'XYL', 'YUM', 'ZBH', 'ZBRA', 'ZION', 'ZTS'
+        'WMT', 'WRB', 'WRK', 'WST', 'WTW', 'WY', 'XRAY', 'XYL', 'YUM', 'ZBH', 
+        'ZBRA', 'ZION', 'ZTS'
     ]
     
-    # Remove duplicates and return
-    return list(set(sp500_symbols))
+    print(f"Loaded {len(sp500_symbols)} S&P 500 symbols")
+    return list(set(sp500_symbols))  # Remove any duplicates
 
 def main():
     # === USER CONFIGURATION ===
