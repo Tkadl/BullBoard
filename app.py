@@ -15,7 +15,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-# Custom CSS for modern styling
+# Custom CSS styling
 st.markdown("""
 <style>
     /* Import Google Fonts */
@@ -1590,9 +1590,26 @@ def create_user_friendly_stock_selection(unique_symbols):
     
     st.markdown("---")
     
-    # TIER 2: Smart Search (Secondary)
+    # TIER 2: Smart Search (Secondary) - OPTIMIZED
     st.markdown("## 🔍 Search & Add Individual Stocks")
     st.markdown("*Find specific companies by name or ticker symbol*")
+    
+    # Cache search data for better performance
+    @st.cache_data
+    def prepare_search_data(symbols):
+        """Pre-process symbols for faster searching"""
+        search_data = []
+        for symbol in symbols:
+            company_name = symbol_to_name.get(symbol, symbol)
+            search_data.append({
+                'symbol': symbol,
+                'name': company_name,
+                'search_text': f"{symbol.lower()} {company_name.lower()}"
+            })
+        return search_data
+    
+    # Prepare searchable data
+    search_data = prepare_search_data(unique_symbols)
     
     search_term = st.text_input(
         "Search company name or ticker",
@@ -1600,39 +1617,53 @@ def create_user_friendly_stock_selection(unique_symbols):
         key="stock_search"
     )
     
-    if search_term and len(search_term) >= 2:
-        # Find matches
-        matches = []
+    if search_term and len(search_term) >= 1:  # Reduced from 2 to 1 for instant search
+        # Optimized search - much faster
         search_lower = search_term.lower()
-        for symbol in unique_symbols:
-            company_name = symbol_to_name.get(symbol, symbol)
-            if (search_lower in symbol.lower() or search_lower in company_name.lower()):
-                matches.append(symbol)
+        matches = [item for item in search_data if search_lower in item['search_text']]
         
-        if matches[:8]:  # Show top 8 matches
-            st.markdown("**Quick Add from Search:**")
+        if matches:
+            st.markdown(f"**Quick Add from Search:** ({len(matches)} matches)")
             
-            # Display in 2 columns for better layout
-            col1, col2 = st.columns(2)
-            for i, symbol in enumerate(matches[:8]):
-                company_name = symbol_to_name.get(symbol, symbol)
-                col = col1 if i % 2 == 0 else col2
-                
-                with col:
-                    col_inner1, col_inner2 = st.columns([3, 1])
-                    with col_inner1:
-                        st.write(f"**{symbol}** - {company_name[:30]}...")
-                    with col_inner2:
-                        if symbol not in st.session_state.stock_basket:
-                            if st.button("+ Add", key=f"add_{symbol}"):
-                                st.session_state.stock_basket.append(symbol)
-                                st.success(f"Added {symbol}!")
-                                st.rerun()
-                        else:
-                            st.write("✅ Added")
+            # Show more matches but limit display
+            display_matches = matches[:12]  # Increased from 8 to 12
+            
+            # Display in 3 columns for better layout
+            cols = st.columns(3)
+            for i, match in enumerate(display_matches):
+                with cols[i % 3]:
+                    symbol = match['symbol']
+                    company_name = match['name']
+                    
+                    # Compact display
+                    if symbol not in st.session_state.stock_basket:
+                        if st.button(f"➕ {symbol}", key=f"add_{symbol}_{i}", help=company_name):
+                            st.session_state.stock_basket.append(symbol)
+                            st.success(f"Added {symbol}!")
+                            st.rerun()
+                    else:
+                        st.button(f"✅ {symbol}", key=f"added_{symbol}_{i}", disabled=True, help="Already added")
+            
+            if len(matches) > 12:
+                st.info(f"Showing first 12 of {len(matches)} matches. Be more specific for better results.")
         else:
             st.warning("No companies found matching your search.")
-    
+    else:
+        # Show popular choices when no search
+        st.markdown("**Popular Choices:**")
+        popular_symbols = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'META', 'NVDA', 'NFLX']
+        available_popular = [s for s in popular_symbols if s in unique_symbols]
+        
+        cols = st.columns(4)
+        for i, symbol in enumerate(available_popular):
+            with cols[i % 4]:
+                if symbol not in st.session_state.stock_basket:
+                    if st.button(f"➕ {symbol}", key=f"pop_{symbol}"):
+                        st.session_state.stock_basket.append(symbol)
+                        st.success(f"Added {symbol}!")
+                        st.rerun()
+                else:
+                    st.button(f"✅ {symbol}", key=f"pop_added_{symbol}", disabled=True)
     st.markdown("---")
     
     # TIER 3: Browse Options (Available but not overwhelming)
@@ -1648,7 +1679,7 @@ def create_user_friendly_stock_selection(unique_symbols):
     if browse_option == "📊 Popular Stocks (Top 50)":
         st.markdown("**Most Popular S&P 500 Stocks:**")
         
-        # Popular stocks (you can customize this list)
+        # Popular stocks
         popular_stocks = [
             'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'TSLA', 'META', 'BRK-B', 'UNH', 'LLY',
             'V', 'JNJ', 'XOM', 'JPM', 'PG', 'MA', 'HD', 'CVX', 'ABBV', 'BAC',
@@ -1748,12 +1779,13 @@ def main():
         st.markdown("### 🎛️ Controls")
         
         # ETL Pipeline Button
-        if st.button("🔄 Refresh Data", key="etl_button"):
-            with st.spinner("Fetching latest market data..."):
-                import etl
-                etl.main()
-            st.success("Data updated successfully!")
-            st.rerun()
+    if st.button("🔄 Refresh Data", key="etl_button"):
+        with st.spinner("🔄 Fetching latest market data... This may take 1-2 minutes."):
+            import etl
+            etl.main()
+    
+        st.success("✅ Data updated successfully!")
+        st.rerun()
 
      # Force Refresh UI Button
         if st.button("🔄 Force Refresh UI", key="force_refresh_ui"):
@@ -1777,14 +1809,21 @@ def main():
         st.info("💡 Sophisticated insights without AI dependencies")
     
     # Load and validate data
-    try:
-        df = pd.read_csv("latest_results.csv", parse_dates=["Date"])
-    except Exception as e:
-        st.error("Failed to load data. Please refresh the data first.")
-        st.stop()
+    @st.cache_data
+    def load_and_validate_data():
+        """Cache the main data loading to avoid repeated CSV reads"""
+        try:
+            df = pd.read_csv("latest_results.csv", parse_dates=["Date"])
+            if df.empty or 'symbol' not in df.columns:
+                return None
+            return df
+        except Exception:
+            return None
     
-    if df.empty or 'symbol' not in df.columns:
-        st.error("No valid data found. Please refresh the data.")
+    # Load and validate data with caching
+    df = load_and_validate_data()
+    if df is None:
+        st.error("Failed to load data. Please refresh the data first.")
         st.stop()
     
    # Data info section with improved metric cards
@@ -1820,7 +1859,12 @@ def main():
    # Stock Selection section
     st.markdown('<div class="section-header"><span class="section-icon">🎯</span><h2>Stock Selection</h2></div>', unsafe_allow_html=True)
 
-    unique_symbols = sorted(df['symbol'].unique())
+    @st.cache_data
+    def get_processed_symbols(_df):
+        """Cache symbol processing"""
+        return sorted(_df['symbol'].unique())
+    
+    unique_symbols = get_processed_symbols(df)
     selected_symbols = create_user_friendly_stock_selection(unique_symbols)
     
     # Filter data based on selection
@@ -1849,25 +1893,32 @@ def main():
         st.warning("No data available for selected stocks and date range.")
         st.stop()
     
-    # Generate summary statistics
-    summary = (
-        filtered_df
-        .groupby("symbol")
-        .agg(
-            period_start=("Date", "min"),
-            period_end=("Date", "max"),
-            period_days=("Date", "count"),
-            avg_close=("Close", "mean"),
-            avg_daily_return=("daily_return", "mean"),
-            total_return=("Close", lambda x: (x.iloc[-1] / x.iloc[0]) - 1 if len(x) > 1 and x.iloc[0] != 0 else np.nan),
-            volatility_21=("volatility_21", "mean"),
-            avg_rolling_yield_21=("rolling_yield_21", "mean"),
-            avg_sharpe_21=("sharpe_21", "mean"),
-            avg_max_drawdown_63=("max_drawdown_63", "mean"),
-            avg_custom_risk_score=("custom_risk_score", "mean"),
+    @st.cache_data
+    def calculate_summary_statistics(_filtered_df, selected_symbols_hash, date_hash):
+        """Cache expensive summary calculations"""
+        return (
+            _filtered_df
+            .groupby("symbol")
+            .agg(
+                period_start=("Date", "min"),
+                period_end=("Date", "max"),
+                period_days=("Date", "count"),
+                avg_close=("Close", "mean"),
+                avg_daily_return=("daily_return", "mean"),
+                total_return=("Close", lambda x: (x.iloc[-1] / x.iloc[0]) - 1 if len(x) > 1 and x.iloc[0] != 0 else np.nan),
+                volatility_21=("volatility_21", "mean"),
+                avg_rolling_yield_21=("rolling_yield_21", "mean"),
+                avg_sharpe_21=("sharpe_21", "mean"),
+                avg_max_drawdown_63=("max_drawdown_63", "mean"),
+                avg_custom_risk_score=("custom_risk_score", "mean"),
+            )
+            .reset_index()
         )
-        .reset_index()
-    )
+    
+    # Generate summary statistics with caching
+    symbols_hash = hash(str(sorted(selected_symbols))) if selected_symbols else 0
+    date_hash = hash(str(date_range)) if 'date_range' in locals() else 0
+    summary = calculate_summary_statistics(filtered_df, symbols_hash, date_hash)
 
     # Portfolio Overview
     if len(selected_symbols) > 1:
@@ -2080,4 +2131,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
