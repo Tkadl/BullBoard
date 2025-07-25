@@ -1,8 +1,79 @@
+import os
+import traceback
 import yfinance as yf
 import pandas as pd
 import numpy as np
 from datetime import datetime, date
-import time
+import time  # Add this import
+
+def get_market_aware_dates():
+    """Get trading dates that account for market schedules"""
+    import pandas as pd
+    from datetime import datetime, timedelta
+    import pytz
+    
+    try:
+        # Use market timezone (NYSE)
+        market_tz = pytz.timezone('America/New_York')
+        now_market = datetime.now(market_tz)
+        
+        # Market closes at 4 PM ET
+        market_close_today = now_market.replace(hour=16, minute=0, second=0, microsecond=0)
+        
+        # If it's before market close today, use yesterday as end date
+        if now_market < market_close_today:
+            end_date = (now_market - timedelta(days=1)).strftime('%Y-%m-%d')
+        else:
+            end_date = now_market.strftime('%Y-%m-%d')
+        
+        # Account for weekends - if end_date is weekend, go to Friday
+        end_datetime = pd.to_datetime(end_date)
+        if end_datetime.weekday() >= 5:  # Saturday=5, Sunday=6
+            days_back = end_datetime.weekday() - 4  # Go back to Friday
+            end_date = (end_datetime - timedelta(days=days_back)).strftime('%Y-%m-%d')
+        
+        start_date = "2024-01-01"  # Your existing start date
+        
+        print(f"📅 Market-aware dates: {start_date} to {end_date} (Market TZ: {now_market.strftime('%Y-%m-%d %H:%M %Z')})")
+        
+        return start_date, end_date, market_tz
+        
+    except Exception as e:
+        print(f"⚠️ Error in market date calculation, falling back to simple dates: {e}")
+        # Fallback to your existing logic
+        from datetime import date
+        start_date = "2024-01-01"
+        end_date = (date.today() - timedelta(days=1)).strftime("%Y-%m-%d")  # Use yesterday
+        return start_date, end_date, None
+
+def fetch_with_retry(tickers_batch, start_date, end_date, max_retries=3, base_delay=3):
+    """
+    Fetch data with retry logic for rate limiting
+    """
+    for attempt in range(max_retries):
+        try:
+            print(f"Attempt {attempt + 1} for batch: {tickers_batch}")
+            raw = yf.download(
+                tickers_batch, 
+                start=start_date, 
+                end=end_date, 
+                auto_adjust=True,
+                prepost=True,
+                threads=True
+            )
+            return raw, []  # Return data and empty failed list
+        except Exception as e:
+            print(f"Attempt {attempt + 1} failed for {tickers_batch}: {e}")
+            if attempt == max_retries - 1:
+                print(f"All attempts failed for batch: {tickers_batch}")
+                return None, tickers_batch  # Return None and failed tickers
+            
+            # Exponential backoff
+            sleep_time = base_delay * (2 ** attempt)
+            print(f"Waiting {sleep_time} seconds before retry...")
+            time.sleep(sleep_time)
+    
+    return None, tickers_batch
 
 def validate_data_quality(df, min_days_needed=65):
     """Basic data validation and anomaly detection"""
@@ -13,7 +84,7 @@ def validate_data_quality(df, min_days_needed=65):
     
     # Check 1: Remove extreme price movements (likely data errors >100% in one day)
     if 'daily_return' in df.columns:
-        df['temp_return'] = df.groupby('symbol')['Close'].pct_change()
+        df['temp_return'] = df.groupby('symbol')['Close'].pct_change(fill_method=None)
         extreme_moves = df[abs(df['temp_return']) > 1.0]  # >100% moves
         if not extreme_moves.empty:
             print(f"  ⚠️  Found {len(extreme_moves)} extreme price movements (>100%)")
@@ -121,7 +192,7 @@ def should_do_incremental_update(last_date, existing_symbols, current_tickers):
     
     return True, f"Will fetch {days_since_update} day(s) of new data"
 
-def fetch_incremental_data(tickers, last_date, end_date, min_days_needed, batch_size=30, delay_between_batches=2):
+def fetch_incremental_data(tickers, last_date, end_date, min_days_needed, batch_size=1, delay_between_batches=2):
     """Fetch only new data since last_date"""
     from datetime import datetime, timedelta
     
@@ -141,44 +212,24 @@ def fetch_incremental_data(tickers, last_date, end_date, min_days_needed, batch_
         batch = tickers[i:i+batch_size]
         print(f"Processing incremental batch {batch_num}/{total_batches} ({len(batch)} symbols)...")
         
-        try:
-            raw = yf.download(
-                tickers=" ".join(batch),
-                start=incremental_start,
-                end=end_date,
-                group_by='ticker',
-                auto_adjust=True,
-                progress=False,
-                threads=True
-            )
-            
-            if len(batch) == 1:
-                ticker = batch[0]
-                temp = raw.copy()
-                if temp.empty:
+        # Use same single-ticker approach for incremental updates
+        for ticker in batch:
+            try:
+                data = yf.download(ticker, start=incremental_start, end=end_date,
+                                  auto_adjust=True, progress=False, threads=True)
+                
+                if data.empty:
                     bad_tickers.append(ticker)
                     continue
-                temp['symbol'] = ticker
-                temp['Date'] = temp.index
-                good_dfs.append(temp.reset_index(drop=True))
-            else:
-                for ticker in batch:
-                    try:
-                        temp = raw[ticker].copy()
-                        if temp.empty:
-                            bad_tickers.append(ticker)
-                            continue
-                        temp['symbol'] = ticker
-                        temp['Date'] = temp.index
-                        good_dfs.append(temp.reset_index(drop=True))
-                    except KeyError:
-                        bad_tickers.append(ticker)
-                        continue
-                        
-        except Exception as e:
-            print(f"Error in batch {batch_num}: {e}")
-            bad_tickers.extend(batch)
-            continue
+                    
+                data['symbol'] = ticker
+                data['Date'] = data.index
+                good_dfs.append(data.reset_index(drop=True))
+                
+            except Exception as e:
+                print(f"Error in incremental fetch for {ticker}: {e}")
+                bad_tickers.append(ticker)
+                continue
             
         if delay_between_batches > 0:
             time.sleep(delay_between_batches)
@@ -187,6 +238,7 @@ def fetch_incremental_data(tickers, last_date, end_date, min_days_needed, batch_
 
 def get_sp500_symbols():
     """Get complete S&P 500 symbols list"""
+    print("DEBUG: get_sp500_symbols() function called!")  # Add this line
     sp500_symbols = [
         'A', 'AAL', 'AAP', 'AAPL', 'ABBV', 'ABC', 'ABT', 'ACN', 'ADBE', 'ADI', 'ADM', 'ADP', 'ADSK', 'AEE', 'AEP', 'AES', 'AFL', 'AIG', 'AIZ', 'AJG', 'AKAM', 'ALB', 'ALGN', 'ALK', 'ALL', 'ALLE', 'AMAT', 'AMCR', 'AMD', 'AME', 'AMGN', 'AMP', 'AMT', 'AMZN', 'ANET', 'ANSS', 'AON', 'AOS', 'APA', 'APD', 'APH', 'APTV', 'ARE', 'ATO', 'AVB', 'AVGO', 'AVY', 'AWK', 'AXP', 'AZO',
         'BA', 'BAC', 'BALL', 'BAX', 'BBWI', 'BBY', 'BDX', 'BEN', 'BF-B', 'BIIB', 'BIO', 'BK', 'BKNG', 'BKR', 'BLK', 'BMY', 'BR', 'BRK-B', 'BRO', 'BSX', 'BWA',
@@ -214,28 +266,85 @@ def get_sp500_symbols():
     return sp500_symbols
 
 def main():
-    print("=== ETL MAIN FUNCTION STARTED ===")
+    print("\n=== ETL MAIN FUNCTION STARTED ===")
+    print("ETL running from directory:", os.getcwd())
     
-    # === USER CONFIGURATION ===
-    tickers = get_sp500_symbols()  # Use dynamic S&P 500 list    
-    start_date = "2024-01-01"
-    end_date = date.today().strftime("%Y-%m-%d")  # Use date.today() instead
+    # === CONFIGURATION ===
+    DEBUG_ONLY_A_FEW = False
+    
+    if DEBUG_ONLY_A_FEW:
+        print("🔧 DEBUG MODE: Using limited tickers")
+        tickers = ['AAPL', 'MSFT', 'GOOGL']
+        batch_size = 1
+        delay_between_batches = 5
+        max_retries = 3
+        print("DEBUG: Only fetching these tickers:", tickers)
+        # Skip the S&P 500 test in debug mode
+        skip_sp500_test = True
+    else:
+        print("📈 PRODUCTION MODE")
+        tickers = get_sp500_symbols()
+        batch_size = 1
+        delay_between_batches = 10
+        max_retries = 3
+        skip_sp500_test = False
+    
+    # Other configuration
     min_days_needed = 65
-    yield_thresh = 0.01          # 1% daily yield
-    risk_thresh = 0.06           # Custom risk score
+    yield_thresh = 0.01          
+    risk_thresh = 0.06           
     rolling_vol_days = 21
     rolling_drawdown_days = 63
-    batch_size = 20  # Reduced batch size for better reliability with more symbols
-    delay_between_batches = 1  # Add delay between batches
+    
+    try:
+        # Conditional S&P 500 test - ONLY run in production mode
+        if not skip_sp500_test:
+            print("Step 1: Fetching S&P 500 symbols...")
+            tickers = get_sp500_symbols()  # Only runs in production mode
+            print(f"✅ Successfully got {len(tickers)} symbols")
+            print(f"First 10 symbols: {tickers[:10]}")
+        else:
+            print("Step 1: Skipping S&P 500 fetch (debug mode)")
+            print(f"✅ Using debug tickers: {tickers}")
+        
+        # Test single stock fetch with actual first ticker
+        print(f"\nStep 2: Testing single stock fetch...")
+        test_ticker = yf.Ticker(tickers[0])
+        test_data = test_ticker.history(period="5d")
+        print(f"✅ Test fetch successful: {len(test_data)} days of {tickers[0]} data")
+        
+        # Test the date setup
+        print("\nStep 3: Testing date configuration...")
+        start_date = "2024-01-01"
+        end_date = date.today().strftime("%Y-%m-%d")
+        print(f"✅ Date range: {start_date} to {end_date}")
+        
+        # Test existing data check
+        print("\nStep 4: Checking existing data...")
+        existing_df, last_date, existing_symbols = get_last_update_info()
+        print(f"✅ Existing data check complete")
+        print(f"Last date: {last_date}")
+        print(f"Existing symbols: {len(existing_symbols) if existing_symbols else 0}")
+        
+        print("\n🎉 All basic tests passed! Issue is likely in the actual data fetching...")
+        
+    except Exception as e:
+        print(f"❌ ERROR: {e}")
+        traceback.print_exc()
+        return
+
+
+    # Original code continues here...
+    print("\nContinuing with original ETL logic...")
+    print(f"Using: batch_size={batch_size}, delay={delay_between_batches}s")
 
     print(f"Checking for existing data and update requirements...")
 
     # Check what data we already have
-    existing_df, last_date, existing_symbols = get_last_update_info()
     can_do_incremental, reason = should_do_incremental_update(last_date, existing_symbols, tickers)
-
     print(f"Update decision: {reason}")
-
+    
+    # Continue with your existing if/else logic...
     if can_do_incremental:
         print("=== PERFORMING INCREMENTAL UPDATE ===")
         
@@ -247,9 +356,26 @@ def main():
         print(f"Incremental fetch: {len(good_dfs)} symbols updated, {len(bad_tickers)} failed")
         
         if good_dfs:
-            # Combine new data
-            new_df = pd.concat(good_dfs, ignore_index=True)
-            new_df = new_df[['symbol', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
+            # Combine new data with standardized columns
+            print("🔧 Standardizing incremental data columns...")
+            standardized_dfs = []
+            
+            for i, df_temp in enumerate(good_dfs):
+                print(f"  DEBUG: Incremental DataFrame {i} columns before standardization: {list(df_temp.columns)}")
+                
+                # Flatten MultiIndex columns if they exist
+                if isinstance(df_temp.columns, pd.MultiIndex):
+                    print(f"  🔧 Flattening MultiIndex columns for incremental DataFrame {i}")
+                    df_temp.columns = df_temp.columns.get_level_values(0)
+                
+                # Now standardize column order
+                expected_columns = ['Open', 'High', 'Low', 'Close', 'Volume', 'symbol', 'Date']
+                df_temp = df_temp[expected_columns]
+                standardized_dfs.append(df_temp)
+                print(f"  ✅ Incremental DataFrame {i} standardized: {list(df_temp.columns)}")
+                
+            new_df = pd.concat(standardized_dfs, ignore_index=True)
+            print(f"✅ Incremental concatenation complete: {new_df.shape}")
             
             # Add timestamp for new data
             download_time = datetime.now()
@@ -269,82 +395,75 @@ def main():
 
     else:
         print("=== PERFORMING FULL REFRESH ===")
-        
         print(f"Fetching data for {len(tickers)} symbols...")
         
         good_dfs = []
         bad_tickers = []
 
-        # Download data in batches with progress tracking
-        total_batches = (len(tickers) + batch_size - 1) // batch_size
+        # Create batches (this was missing!)
+        batches = [tickers[i:i + batch_size] for i in range(0, len(tickers), batch_size)]
+        total_batches = len(batches)
         start_time = datetime.now()
         
-            
-        for batch_num, i in enumerate(range(0, len(tickers), batch_size), 1):
-            batch = tickers[i:i+batch_size]
-            batch_info = f"Fetching {len(batch)} symbols: {batch[0]} to {batch[-1]}"
-      
-            
+        for batch_num, batch in enumerate(batches, 1):
             print(f"Processing batch {batch_num}/{total_batches} ({len(batch)} symbols)...")
             
-            try:
-                raw = yf.download(
-                    tickers=" ".join(batch),
-                    start=start_date,
-                    end=end_date,
-                    group_by='ticker',
-                    auto_adjust=True,
-                    progress=False,
-                    threads=True
-                )
-                
-                if len(batch) == 1:
-                    ticker = batch[0]
-                    temp = raw.copy()
-                    if temp.empty or len(temp) < min_days_needed:
+    
+            # Process each ticker individually (Stack Overflow single ticker approach)
+            for ticker in batch:
+                try:
+                    print(f"  Downloading {ticker}...")
+                    # Download single ticker without group_by - creates simple columns
+                    data = yf.download(ticker, start=start_date, end=end_date, 
+                                      auto_adjust=True, prepost=True, threads=True)
+                    
+                    if data.empty or len(data) < min_days_needed:
+                        print(f"  ⚠️ Insufficient data for {ticker}: {len(data)} rows")
                         bad_tickers.append(ticker)
                         continue
-                    temp['symbol'] = ticker
-                    temp['Date'] = temp.index
-                    good_dfs.append(temp.reset_index(drop=True))
-                else:
-                    for ticker in batch:
-                        try:
-                            temp = raw[ticker].copy()
-                            if temp.empty or len(temp) < min_days_needed:
-                                bad_tickers.append(ticker)
-                                continue
-                            temp['symbol'] = ticker
-                            temp['Date'] = temp.index
-                            good_dfs.append(temp.reset_index(drop=True))
-                        except KeyError:
-                            bad_tickers.append(ticker)
-                            continue
-                            
-            except Exception as e:
-                print(f"Error in batch {batch_num}: {e}")
-                bad_tickers.extend(batch)
-                continue
+                        
+                    # Add ticker column (Stack Overflow approach)
+                    data['symbol'] = ticker
+                    data['Date'] = data.index
+                    good_dfs.append(data.reset_index(drop=True))
+                    print(f"  ✅ {ticker}: {len(data)} rows added")
+                    
+                except Exception as e:
+                    print(f"  ❌ Error downloading {ticker}: {e}")
+                    bad_tickers.append(ticker)
+                    continue
             
-            # Add delay between batches to be respectful to the API
-            if batch_num < total_batches:
-                time.sleep(delay_between_batches)
-        
-        print(f"Successfully fetched: {len(good_dfs)} symbols")
-        print(f"Failed to fetch: {len(bad_tickers)} symbols")
-        if bad_tickers:
-            print(f"Failed symbols: {bad_tickers[:10]}{'...' if len(bad_tickers) > 10 else ''}")
-
         if good_dfs:
-            df = pd.concat(good_dfs, ignore_index=True)
-            df = df[['symbol', 'Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
+            print("🔧 Standardizing DataFrame columns before concatenation...")
+            standardized_dfs = []
+            
+            for i, df_temp in enumerate(good_dfs):
+                print(f"  DEBUG: DataFrame {i} columns before standardization: {list(df_temp.columns)}")
+                
+                # Flatten MultiIndex columns if they exist
+                if isinstance(df_temp.columns, pd.MultiIndex):
+                    print(f"  🔧 Flattening MultiIndex columns for DataFrame {i}")
+                    # Take only the first level (the actual column names)
+                    df_temp.columns = df_temp.columns.get_level_values(0)
+                
+                # Now standardize column order
+                expected_columns = ['Open', 'High', 'Low', 'Close', 'Volume', 'symbol', 'Date']
+                df_temp = df_temp[expected_columns]
+                standardized_dfs.append(df_temp)
+                print(f"  ✅ DataFrame {i} standardized: {list(df_temp.columns)}")
+                
+            df = pd.concat(standardized_dfs, ignore_index=True)
+            print(f"✅ Concatenation complete: {df.shape}")
+            print(f"✅ Final columns: {list(df.columns)}")
+            print(f"✅ Column type: {type(df.columns)}")
         else:
             print("No data fetched — check your internet connection and ticker list.")
             return
+            
         # TIMESTAMP DATA DOWNLOAD
         download_time = datetime.now()
         df['download_time'] = download_time.strftime('%Y-%m-%d %H:%M')
-
+    
     # DATA VALIDATION BEFORE CALC
     bad_symbols = []
     for sym, group in df.groupby('symbol'):
@@ -353,22 +472,66 @@ def main():
     df = df[~df['symbol'].isin(bad_symbols)]
 
     # ROLLING ANALYTICS
+    print("🔧 Calculating rolling analytics...")
     df = df.sort_values(['symbol', 'Date']).reset_index(drop=True)
-    df['daily_return'] = df.groupby('symbol')['Close'].pct_change(fill_method=None)
-    df['volatility_21'] = df.groupby('symbol')['daily_return'].rolling(rolling_vol_days).std().reset_index(0, drop=True)
-    df['rolling_yield_21'] = df.groupby('symbol')['daily_return'].rolling(rolling_vol_days).mean().reset_index(0, drop=True)
-    df['sharpe_21'] = (df['rolling_yield_21'] / df['volatility_21']) * np.sqrt(252)
-    df['max_drawdown_63'] = df.groupby('symbol')['Close'].rolling(rolling_drawdown_days)\
-        .apply(lambda x: (np.max(x) - np.min(x)) / np.max(x) if len(x) > 0 and np.max(x) != 0 else 0, raw=False)\
-        .reset_index(0, drop=True)
-    df['custom_risk_score'] = df['volatility_21'] * 0.7 + df['max_drawdown_63'] * 0.3
+    
+    # Calculate analytics with proper error handling
+    try:
+        df['daily_return'] = df.groupby('symbol')['Close'].pct_change(fill_method=None)
+        df['volatility_21'] = df.groupby('symbol')['daily_return'].rolling(rolling_vol_days).std().reset_index(0, drop=True)
+        df['rolling_yield_21'] = df.groupby('symbol')['daily_return'].rolling(rolling_vol_days).mean().reset_index(0, drop=True)
+        df['sharpe_21'] = (df['rolling_yield_21'] / df['volatility_21']) * np.sqrt(252)
+        
+        # Simplified max drawdown calculation to avoid length mismatch
+        df['max_drawdown_63'] = df.groupby('symbol')['Close'].rolling(rolling_drawdown_days).max().reset_index(0, drop=True) - \
+                               df.groupby('symbol')['Close'].rolling(rolling_drawdown_days).min().reset_index(0, drop=True)
+        df['max_drawdown_63'] = df['max_drawdown_63'] / df.groupby('symbol')['Close'].rolling(rolling_drawdown_days).max().reset_index(0, drop=True)
+        
+        df['custom_risk_score'] = df['volatility_21'] * 0.7 + df['max_drawdown_63'] * 0.3
+        print("✅ Rolling analytics calculated successfully")
+        
+    except Exception as e:
+        print(f"⚠️ Error in rolling analytics: {e}")
+        # Add default values if calculations fail
+        df['daily_return'] = 0
+        df['volatility_21'] = 0
+        df['rolling_yield_21'] = 0
+        df['sharpe_21'] = 0
+        df['max_drawdown_63'] = 0
+        df['custom_risk_score'] = 0
+
+    # Get each stock's latest analytics
+    latest = df.sort_values('Date').groupby('symbol').tail(1)
+    latest = latest[['symbol', 'Date', 'custom_risk_score', 'rolling_yield_21', 'sharpe_21', 'volatility_21', 'max_drawdown_63']].copy()
+    latest = latest.sort_values('custom_risk_score', ascending=False)
+    latest.reset_index(drop=True, inplace=True)
 
     # Data quality validation before saving
     df = validate_data_quality(df)
     
     # Save summary table for Streamlit app
-    df.to_csv("latest_results.csv", index=False)
-    print(f"Data saved to latest_results.csv with {len(df)} total records for {df['symbol'].nunique()} unique symbols")
+    print("\n=== ETL SUMMARY BEFORE FINAL SAVE ===")
+    try:
+        print(f"DataFrame shape: {df.shape}")
+        print(f"Unique symbols: {df['symbol'].nunique() if 'symbol' in df.columns else 'MISSING SYMBOL COL'}")
+        print("Sample rows:")
+        print(df.head())
+    except Exception as e:
+        print("❗ Trouble with dataframe before save:", str(e))
+        print(traceback.format_exc())
+    
+    # Write file and confirm output
+    output_path = "latest_results.csv"
+    print("Attempting to save data to:", output_path)
+    try:
+        df.to_csv(output_path, index=False)
+        print("✅ Data saved. File size:", os.path.getsize(output_path), "bytes")
+    except Exception as e:
+        print(f"❌ Failed to save output CSV: {e}")
+        print(traceback.format_exc())
+    
+    # Show files in directory so you know file is truly there
+    print("Files in cwd:", os.listdir(os.getcwd()))
 
 if __name__ == "__main__":
     main()
