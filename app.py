@@ -1473,7 +1473,7 @@ def get_complete_symbol_name_mapping():
     }
 
 def create_user_friendly_stock_selection(unique_symbols):
-    """Unified stock selection with persistent basket"""
+    """Modern 2-column stock selection interface"""
     
     # Initialize session state for selection basket
     if 'stock_basket' not in st.session_state:
@@ -1481,292 +1481,401 @@ def create_user_friendly_stock_selection(unique_symbols):
     
     symbol_to_name = get_complete_symbol_name_mapping()
     
-    # Clean header hierarchy
-    st.markdown("### 📈 Build Your Portfolio")
-    st.markdown("*Search, browse, or use quick picks to build your analysis portfolio*")
-    
-    # Show current selection basket
-    if st.session_state.stock_basket:
-        st.markdown("**🛒 Your Current Selection:**")
-        
-        cols = st.columns(min(len(st.session_state.stock_basket), 4))
-        for i, symbol in enumerate(st.session_state.stock_basket):
-            col = cols[i % 4]
-            company_name = symbol_to_name.get(symbol, symbol)
-            with col:
-                if st.button(f"❌ {symbol}", key=f"remove_{symbol}"):
-                    st.session_state.stock_basket.remove(symbol)
-                    st.rerun()
-                st.caption(company_name[:20] + "..." if len(company_name) > 20 else company_name)
-        
-        col1, col2 = st.columns([1, 3])
-        with col1:
-            if st.button("🗑️ Clear All", key="clear_basket"):
-                st.session_state.stock_basket = []
-                st.rerun()
-        with col2:
-            st.info(f"📊 Ready to analyze {len(st.session_state.stock_basket)} stocks")
-    
     st.markdown("---")
+    # Ultra-Sleek Financial Theme with Animated Starfield
+    st.markdown("""
+    <style>
+    .stApp {
+        background: 
+            radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.15), transparent),
+            radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.1), transparent),
+            radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.1), transparent),
+            radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.1), transparent),
+            radial-gradient(2px 2px at 160px 30px, rgba(255,255,255,0.1), transparent),
+            linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 15%, #16213e 35%, #0f3460 55%, #533483 75%, #7b2d26 95%, #2c1810 100%) !important;
+        background-size: 
+            200px 100px,
+            300px 120px,
+            150px 200px,
+            250px 150px,
+            180px 90px,
+            100% 100% !important;
+        background-attachment: fixed !important;
+        animation: starfieldMove 25s linear infinite, gradientPulse 15s ease-in-out infinite !important;
+    }
     
-    # TIER 1: Quick Categories (Most Prominent)
-    st.markdown("## ⚡ Quick Categories")
-    st.markdown("*One-click portfolio building for common investment themes*")
-    
-    # Enhanced categories with more options
-    quick_categories = {
-        "🍎 Big Tech": {
-            'stocks': ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA'],
-            'desc': 'Major technology giants'
-        },
-        "🏦 Major Banks": {
-            'stocks': ['JPM', 'BAC', 'WFC', 'C', 'GS', 'MS'],
-            'desc': 'Leading financial institutions'
-        },
-        "⚡ AI & Semiconductors": {
-            'stocks': ['NVDA', 'AMD', 'INTC', 'QCOM', 'AVGO', 'TSM'],
-            'desc': 'Artificial intelligence & chips'
-        },
-        "💊 Healthcare Leaders": {
-            'stocks': ['UNH', 'JNJ', 'PFE', 'ABBV', 'MRK', 'LLY'],
-            'desc': 'Healthcare & pharmaceuticals'
-        },
-        "🛒 Consumer Favorites": {
-            'stocks': ['WMT', 'COST', 'HD', 'TGT', 'NKE', 'SBUX'],
-            'desc': 'Popular consumer brands'
-        },
-        "⚡ Energy & Utilities": {
-            'stocks': ['XOM', 'CVX', 'COP', 'NEE', 'DUK', 'SO'],
-            'desc': 'Energy companies & utilities'
-        },
-        "🏭 Industrial Giants": {
-            'stocks': ['BA', 'CAT', 'GE', 'HON', 'MMM', 'UPS'],
-            'desc': 'Manufacturing & industrials'
-        },
-        "💰 Dividend Champions": {
-            'stocks': ['JNJ', 'PG', 'KO', 'PEP', 'MCD', 'WMT'],
-            'desc': 'Reliable dividend payers'
+    @keyframes starfieldMove {
+        0% {
+            background-position: 0px 0px, 0px 0px, 0px 0px, 0px 0px, 0px 0px, 0% 50%;
+        }
+        100% {
+            background-position: 200px 100px, -300px 120px, 150px -200px, -250px 150px, 180px -90px, 100% 50%;
         }
     }
     
-    # Display categories in a 2x4 grid
-    col1, col2 = st.columns(2)
-    category_items = list(quick_categories.items())
+    @keyframes gradientPulse {
+        0%, 100% {
+            background-position: 0px 0px, 0px 0px, 0px 0px, 0px 0px, 0px 0px, 0% 50%;
+        }
+        50% {
+            background-position: 100px 50px, 150px 60px, 75px 100px, 125px 75px, 90px 45px, 100% 50%;
+        }
+    }
     
-    for i in range(0, len(category_items), 2):
-        with col1:
-            if i < len(category_items):
-                category_name, category_data = category_items[i]
-                available_count = len([s for s in category_data['stocks'] if s in unique_symbols])
-                
-                if st.button(f"{category_name}\n({available_count} stocks)", 
-                           key=f"quick_{i}", 
-                           help=category_data['desc']):
-                    # Add to basket (avoid duplicates)
-                    added_count = 0
-                    for symbol in category_data['stocks']:
-                        if symbol not in st.session_state.stock_basket and symbol in unique_symbols:
-                            st.session_state.stock_basket.append(symbol)
-                            added_count += 1
-                    st.success(f"Added {added_count} stocks to your portfolio!")
-                    st.rerun()
+    /* Enhanced text with subtle glow */
+    .stMarkdown, .stText, p, span {
+        color: #f8f9fa !important;
+        text-shadow: 0 0 10px rgba(248, 249, 250, 0.1) !important;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        color: #ffffff !important;
+        text-shadow: 0 0 15px rgba(255, 255, 255, 0.2) !important;
+    }
+    
+    /* Premium button styling with enhanced gradient */
+    .stButton > button {
+        background: linear-gradient(45deg, 
+            rgba(123, 45, 38, 0.9) 0%, 
+            rgba(83, 52, 131, 0.9) 25%, 
+            rgba(15, 52, 96, 0.9) 50%, 
+            rgba(83, 52, 131, 0.9) 75%, 
+            rgba(123, 45, 38, 0.9) 100%) !important;
+        background-size: 200% 200% !important;
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 10px !important;
+        font-weight: bold !important;
+        box-shadow: 
+            0 4px 15px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+        transition: all 0.4s ease !important;
+        animation: buttonShimmer 3s ease-in-out infinite !important;
+    }
+    
+    @keyframes buttonShimmer {
+        0%, 100% {
+            background-position: 0% 50%;
+        }
+        50% {
+            background-position: 100% 50%;
+        }
+    }
+    
+    .stButton > button:hover {
+        background-position: 100% 50% !important;
+        transform: translateY(-2px) scale(1.02) !important;
+        box-shadow: 
+            0 8px 25px rgba(123, 45, 38, 0.4),
+            0 4px 15px rgba(83, 52, 131, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+        border-color: rgba(255, 255, 255, 0.5) !important;
+    }
+    
+    /* Sleek input styling with glow effects */
+    .stSelectbox > div > div,
+    .stTextInput > div > div > input {
+        background: rgba(255, 255, 255, 0.08) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 10px !important;
+        color: #f8f9fa !important;
+        backdrop-filter: blur(10px) !important;
+        box-shadow: 
+            inset 0 1px 3px rgba(0, 0, 0, 0.2),
+            0 1px 3px rgba(255, 255, 255, 0.1) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .stSelectbox > div > div:focus,
+    .stTextInput > div > div > input:focus {
+        border-color: rgba(123, 45, 38, 0.7) !important;
+        box-shadow: 
+            0 0 0 3px rgba(123, 45, 38, 0.15),
+            inset 0 1px 3px rgba(0, 0, 0, 0.2),
+            0 1px 8px rgba(123, 45, 38, 0.3) !important;
+        background: rgba(255, 255, 255, 0.12) !important;
+    }
+    
+    /* Enhanced metric containers */
+    div[data-testid="metric-container"] {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 12px !important;
+        backdrop-filter: blur(15px) !important;
+        box-shadow: 
+            0 8px 32px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # Create a container specifically for the portfolio section
+    st.markdown('<div class="portfolio-section">', unsafe_allow_html=True)
+    
+    # Now create normal Streamlit columns - they'll get the gradient styling
+    left_col, right_col = st.columns([35, 65], gap="large")
+    
+    # === LEFT COLUMN: Current Portfolio ===
+    with left_col:
+        st.markdown("### 📊 Your Portfolio")
         
-        with col2:
-            if i + 1 < len(category_items):
-                category_name, category_data = category_items[i + 1]
-                available_count = len([s for s in category_data['stocks'] if s in unique_symbols])
-                
-                if st.button(f"{category_name}\n({available_count} stocks)", 
-                           key=f"quick_{i+1}", 
-                           help=category_data['desc']):
-                    # Add to basket (avoid duplicates)
-                    added_count = 0
-                    for symbol in category_data['stocks']:
-                        if symbol not in st.session_state.stock_basket and symbol in unique_symbols:
-                            st.session_state.stock_basket.append(symbol)
-                            added_count += 1
-                    st.success(f"Added {added_count} stocks to your portfolio!")
+        if st.session_state.stock_basket:
+            st.write(f"**{len(st.session_state.stock_basket)} stocks selected:**")
+            
+            # Display stocks with white containers
+            for symbol in st.session_state.stock_basket:
+                company_name = symbol_to_name.get(symbol, symbol)
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    st.markdown(f"""
+                    <div style="
+                        background: rgba(255, 255, 255, 0.95);
+                        padding: 10px 15px;
+                        border-radius: 10px;
+                        color: #2d3436;
+                        font-weight: bold;
+                        margin: 5px 0;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                        border-left: 4px solid #4facfe;
+                    ">
+                    {symbol} - {company_name[:25]}{'...' if len(company_name) > 25 else ''}
+                    </div>
+                    """, unsafe_allow_html=True)
+                with col2:
+                    if st.button("❌", key=f"remove_{symbol}", help="Remove"):
+                        st.session_state.stock_basket.remove(symbol)
+                        st.rerun()
+            
+            # Portfolio status
+            portfolio_size = len(st.session_state.stock_basket)
+            if portfolio_size <= 3:
+                status_color = "#ff9500"
+                status_text = "Small portfolio"
+                status_emoji = "🟡"
+            elif portfolio_size <= 6:
+                status_color = "#28a745"
+                status_text = "Good diversity"
+                status_emoji = "🟢"
+            else:
+                status_color = "#007bff"
+                status_text = "Well diversified"
+                status_emoji = "🔵"
+            
+            st.markdown(f"""
+            <div style="
+                background: rgba(255, 255, 255, 0.95);
+                padding: 15px;
+                border-radius: 12px;
+                text-align: center;
+                color: {status_color};
+                font-weight: bold;
+                margin: 15px 0;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                border: 2px solid {status_color};
+            ">
+            {status_emoji} {portfolio_size} stocks selected - {status_text}
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Action buttons
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("🗑️ Clear All", key="clear_basket"):
+                    st.session_state.stock_basket = []
                     st.rerun()
-    
-    st.markdown("---")
-    
-    # TIER 2: Smart Search (Secondary) - OPTIMIZED
-    st.markdown("## 🔍 Search & Add Individual Stocks")
-    st.markdown("*Find specific companies by name or ticker symbol*")
-    
-    # Cache search data for better performance
-    @st.cache_data
-    def prepare_search_data(symbols):
-        """Pre-process symbols for faster searching"""
-        search_data = []
-        for symbol in symbols:
-            company_name = symbol_to_name.get(symbol, symbol)
-            search_data.append({
-                'symbol': symbol,
-                'name': company_name,
-                'search_text': f"{symbol.lower()} {company_name.lower()}"
-            })
-        return search_data
-    
-    # Prepare searchable data
-    search_data = prepare_search_data(unique_symbols)
-    
-    search_term = st.text_input(
-        "Search company name or ticker",
-        placeholder="e.g., 'Apple', 'Tesla', 'AAPL'",
-        key="stock_search"
-    )
-    
-    if search_term and len(search_term) >= 1:  # Reduced from 2 to 1 for instant search
-        # Optimized search - much faster
-        search_lower = search_term.lower()
-        matches = [item for item in search_data if search_lower in item['search_text']]
+            with col2:
+                st.markdown(f"""
+                <div style="
+                    background: rgba(255, 255, 255, 0.95);
+                    padding: 10px 15px;
+                    border-radius: 10px;
+                    text-align: center;
+                    color: #28a745;
+                    font-weight: bold;
+                    box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+                    border: 2px solid #28a745;
+                ">
+                ✅ Ready to Analyze!
+                </div>
+                """, unsafe_allow_html=True)
         
-        if matches:
-            st.markdown(f"**Quick Add from Search:** ({len(matches)} matches)")
+        else:
+            st.info("👈 Select stocks from the categories or search")
+            st.write("**Quick start suggestions:**")
+            quick_add = ['AAPL', 'MSFT', 'GOOGL']
+            for symbol in quick_add:
+                if symbol in unique_symbols:
+                    if st.button(f"+ Add {symbol}", key=f"quick_{symbol}"):
+                        st.session_state.stock_basket.append(symbol)
+                        st.rerun()
+    
+    # === RIGHT COLUMN: Stock Discovery ===
+    with right_col:
+        st.markdown("### 🎯 Add Stocks")
+        
+        # Discovery method selector
+        discovery_method = st.selectbox(
+            "Choose method:",
+            ["⚡ Quick Categories", "🔍 Search Stocks", "📊 Browse All"],
+            key="discovery_method"
+        )
+        
+        if discovery_method == "⚡ Quick Categories":
+            st.write("**One-click portfolio themes:**")
             
-            # Show more matches but limit display
-            display_matches = matches[:12]  # Increased from 8 to 12
+            categories = {
+                "🍎 Big Tech": ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA'],
+                "🏦 Major Banks": ['JPM', 'BAC', 'WFC', 'C', 'GS', 'MS'],
+                "⚡ AI & Chips": ['NVDA', 'AMD', 'INTC', 'QCOM', 'AVGO'],
+                "💊 Healthcare": ['UNH', 'JNJ', 'PFE', 'ABBV', 'MRK', 'LLY'],
+                "🛒 Consumer": ['WMT', 'COST', 'HD', 'TGT', 'NKE', 'SBUX'],
+                "⚡ Energy": ['XOM', 'CVX', 'COP', 'NEE', 'DUK'],
+                "🏭 Industrial": ['BA', 'CAT', 'GE', 'HON', 'MMM', 'UPS'],
+                "💰 Dividends": ['JNJ', 'PG', 'KO', 'PEP', 'MCD', 'WMT']
+            }
             
-            # Display in 3 columns for better layout
-            cols = st.columns(3)
-            for i, match in enumerate(display_matches):
-                with cols[i % 3]:
-                    symbol = match['symbol']
-                    company_name = match['name']
+            # Category buttons in 2 columns
+            col1, col2 = st.columns(2, gap="medium")
+            category_items = list(categories.items())
+            
+            with col1:
+                for i in range(0, len(category_items), 2):
+                    category_name, stocks = category_items[i]
+                    if st.button(f"{category_name} ({len(stocks)})", key=f"cat_{i}", use_container_width=True):
+                        added_count = 0
+                        for stock in stocks:
+                            if stock in unique_symbols and stock not in st.session_state.stock_basket:
+                                st.session_state.stock_basket.append(stock)
+                                added_count += 1
+                        if added_count > 0:
+                            st.success(f"Added {added_count} stocks!")
+                            st.rerun()
+            
+            with col2:
+                for i in range(1, len(category_items), 2):
+                    category_name, stocks = category_items[i]
+                    if st.button(f"{category_name} ({len(stocks)})", key=f"cat_{i}", use_container_width=True):
+                        added_count = 0
+                        for stock in stocks:
+                            if stock in unique_symbols and stock not in st.session_state.stock_basket:
+                                st.session_state.stock_basket.append(stock)
+                                added_count += 1
+                        if added_count > 0:
+                            st.success(f"Added {added_count} stocks!")
+                            st.rerun()
+            
+            # Tip section
+            st.markdown("""
+            <div style="
+                background: rgba(255, 255, 255, 0.95);
+                padding: 15px;
+                border-radius: 10px;
+                text-align: center;
+                color: #e17055;
+                font-weight: bold;
+                margin-top: 20px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                border-left: 4px solid #fdcb6e;
+            ">
+            💡 Tip: Click any category above to add all its stocks to your portfolio!
+            </div>
+            """, unsafe_allow_html=True)
+        
+        elif discovery_method == "🔍 Search Stocks":
+            st.write("**Find companies by name or ticker:**")
+            
+            search_term = st.text_input(
+                "Search:",
+                placeholder="e.g., 'Apple', 'Tesla', 'AAPL'",
+                key="stock_search"
+            )
+            
+            if search_term:
+                matches = []
+                search_lower = search_term.lower()
+                for symbol in unique_symbols:
+                    company_name = symbol_to_name.get(symbol, symbol)
+                    if (search_lower in symbol.lower() or 
+                        search_lower in company_name.lower()):
+                        matches.append((symbol, company_name))
+                
+                if matches:
+                    st.write(f"**Found {len(matches)} matches:**")
                     
-                    # Compact display
-                    if symbol not in st.session_state.stock_basket:
-                        if st.button(f"➕ {symbol}", key=f"add_{symbol}_{i}", help=company_name):
+                    for symbol, company_name in matches[:10]:
+                        col1, col2 = st.columns([3, 1])
+                        with col1:
+                            st.markdown(f"""
+                            <div style="
+                                background: rgba(255, 255, 255, 0.95);
+                                padding: 8px 12px;
+                                border-radius: 8px;
+                                color: #2d3436;
+                                margin: 5px 0;
+                                border-left: 3px solid #f093fb;
+                            ">
+                            <strong>{symbol}</strong> - {company_name}
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col2:
+                            if st.button("➕", key=f"add_{symbol}", help="Add"):
+                                if symbol not in st.session_state.stock_basket:
+                                    st.session_state.stock_basket.append(symbol)
+                                    st.success(f"Added {symbol}!")
+                                    st.rerun()
+                else:
+                    st.warning("No matches found. Try a different search term.")
+        
+        elif discovery_method == "📊 Browse All":
+            st.write("**All available stocks:**")
+            
+            items_per_page = 15
+            total_items = len(unique_symbols)
+            total_pages = (total_items - 1) // items_per_page + 1
+            
+            page = st.selectbox(
+                f"Page (showing {items_per_page} stocks per page):",
+                range(1, total_pages + 1),
+                key="browse_page"
+            )
+            
+            start_idx = (page - 1) * items_per_page
+            end_idx = min(start_idx + items_per_page, total_items)
+            
+            st.write(f"**Showing stocks {start_idx + 1}-{end_idx} of {total_items}:**")
+            
+            for i in range(start_idx, end_idx):
+                symbol = unique_symbols[i]
+                company_name = symbol_to_name.get(symbol, symbol)
+                
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    st.markdown(f"""
+                    <div style="
+                        background: rgba(255, 255, 255, 0.95);
+                        padding: 8px 12px;
+                        border-radius: 8px;
+                        color: #2d3436;
+                        margin: 3px 0;
+                        border-left: 3px solid #f093fb;
+                    ">
+                    <strong>{symbol}</strong> - {company_name}
+                    </div>
+                    """, unsafe_allow_html=True)
+                with col2:
+                    if st.button("➕", key=f"browse_add_{symbol}", help="Add"):
+                        if symbol not in st.session_state.stock_basket:
                             st.session_state.stock_basket.append(symbol)
                             st.success(f"Added {symbol}!")
                             st.rerun()
-                    else:
-                        st.button(f"✅ {symbol}", key=f"added_{symbol}_{i}", disabled=True, help="Already added")
-            
-            if len(matches) > 12:
-                st.info(f"Showing first 12 of {len(matches)} matches. Be more specific for better results.")
-        else:
-            st.warning("No companies found matching your search.")
-    else:
-        # Show popular choices when no search
-        st.markdown("**Popular Choices:**")
-        popular_symbols = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'META', 'NVDA', 'NFLX']
-        available_popular = [s for s in popular_symbols if s in unique_symbols]
-        
-        cols = st.columns(4)
-        for i, symbol in enumerate(available_popular):
-            with cols[i % 4]:
-                if symbol not in st.session_state.stock_basket:
-                    if st.button(f"➕ {symbol}", key=f"pop_{symbol}"):
-                        st.session_state.stock_basket.append(symbol)
-                        st.success(f"Added {symbol}!")
-                        st.rerun()
-                else:
-                    st.button(f"✅ {symbol}", key=f"pop_added_{symbol}", disabled=True)
-    st.markdown("---")
+
+    # Close the portfolio section container
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    # TIER 3: Browse Options (Available but not overwhelming)
-    st.markdown("## 📋 Browse & Discover")
-    st.markdown("*Explore investment options by popularity or sector*")
-    
-    browse_option = st.selectbox(
-        "Choose browsing method:",
-        ["Select browsing option...", "📊 Popular Stocks (Top 50)", "🏢 Browse by Sector", "📚 All Available Stocks"],
-        key="browse_method"
-    )
-    
-    if browse_option == "📊 Popular Stocks (Top 50)":
-        st.markdown("**Most Popular S&P 500 Stocks:**")
-        
-        # Popular stocks
-        popular_stocks = [
-            'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'TSLA', 'META', 'BRK-B', 'UNH', 'LLY',
-            'V', 'JNJ', 'XOM', 'JPM', 'PG', 'MA', 'HD', 'CVX', 'ABBV', 'BAC',
-            'ORCL', 'KO', 'AVGO', 'PEP', 'COST', 'WMT', 'TMO', 'MRK', 'NFLX', 'DIS',
-            'ABT', 'CRM', 'VZ', 'ADBE', 'DHR', 'ACN', 'TXN', 'QCOM', 'WFC', 'PM',
-            'CMCSA', 'NEE', 'RTX', 'BMY', 'INTC', 'UPS', 'T', 'LOW', 'SPGI', 'HON'
-        ]
-        
-        available_popular = [s for s in popular_stocks if s in unique_symbols]
-        
-        # Display in grid format
-        cols = st.columns(5)
-        for i, symbol in enumerate(available_popular[:25]):  # Show first 25
-            col = cols[i % 5]
-            company_name = symbol_to_name.get(symbol, symbol)
-            
-            with col:
-                if symbol not in st.session_state.stock_basket:
-                    if st.button(f"{symbol}\n{company_name[:15]}...", key=f"pop_{symbol}"):
-                        st.session_state.stock_basket.append(symbol)
-                        st.rerun()
-                else:
-                    st.button(f"✅ {symbol}", disabled=True, key=f"pop_added_{symbol}")
-    
-    elif browse_option == "🏢 Browse by Sector":
-        st.markdown("**Browse by Industry Sector:**")
-        
-        sector_mapping = {
-            'Technology': ['AAPL', 'MSFT', 'GOOGL', 'NVDA', 'META', 'ORCL', 'CRM', 'ADBE'],
-            'Healthcare': ['UNH', 'JNJ', 'PFE', 'ABBV', 'MRK', 'LLY', 'TMO', 'ABT'],
-            'Financial': ['JPM', 'BAC', 'WFC', 'GS', 'MS', 'V', 'MA', 'BRK-B'],
-            'Consumer': ['AMZN', 'HD', 'WMT', 'COST', 'NKE', 'SBUX', 'MCD', 'TGT'],
-            'Energy': ['XOM', 'CVX', 'COP', 'EOG', 'SLB', 'PSX', 'VLO', 'MPC'],
-            'Industrial': ['BA', 'CAT', 'GE', 'HON', 'MMM', 'UPS', 'FDX', 'RTX']
-        }
-        
-        selected_sector = st.selectbox("Choose sector:", list(sector_mapping.keys()), key="sector_browse")
-        
-        if selected_sector:
-            sector_stocks = [s for s in sector_mapping[selected_sector] if s in unique_symbols]
-            
-            cols = st.columns(4)
-            for i, symbol in enumerate(sector_stocks):
-                col = cols[i % 4]
-                company_name = symbol_to_name.get(symbol, symbol)
-                
-                with col:
-                    if symbol not in st.session_state.stock_basket:
-                        if st.button(f"{symbol}\n{company_name[:15]}...", key=f"sec_{symbol}"):
-                            st.session_state.stock_basket.append(symbol)
-                            st.rerun()
-                    else:
-                        st.button(f"✅ {symbol}", disabled=True, key=f"sec_added_{symbol}")
-    
-    elif browse_option == "📚 All Available Stocks":
-        st.markdown(f"**All Available Stocks ({len(unique_symbols)} total):**")
-        st.markdown("*Use search above for faster results*")
-        
-        # Paginated display
-        page_size = 20
-        total_pages = (len(unique_symbols) + page_size - 1) // page_size
-        
-        page = st.selectbox(f"Page (showing {page_size} stocks per page):", 
-                           range(1, total_pages + 1), key="stock_page") - 1
-        
-        start_idx = page * page_size
-        end_idx = start_idx + page_size
-        page_stocks = sorted(unique_symbols)[start_idx:end_idx]
-        
-        cols = st.columns(4)
-        for i, symbol in enumerate(page_stocks):
-            col = cols[i % 4]
-            company_name = symbol_to_name.get(symbol, symbol)
-            
-            with col:
-                if symbol not in st.session_state.stock_basket:
-                    if st.button(f"{symbol}\n{company_name[:15]}...", key=f"all_{symbol}"):
-                        st.session_state.stock_basket.append(symbol)
-                        st.rerun()
-                else:
-                    st.button(f"✅ {symbol}", disabled=True, key=f"all_added_{symbol}")
-    
-    # Return the current basket
+    # Return selection
     if st.session_state.stock_basket:
         return st.session_state.stock_basket
     else:
-        # If basket is empty, return some default stocks to prevent errors
         default_stocks = ['AAPL', 'MSFT', 'GOOGL']
         available_defaults = [stock for stock in default_stocks if stock in unique_symbols]
         return available_defaults[:3] if available_defaults else unique_symbols[:3]
@@ -1774,16 +1883,12 @@ def create_user_friendly_stock_selection(unique_symbols):
 def main():
     create_header()
     
-    # Sidebar for controls
-    with st.sidebar:
-        st.markdown("### 🎛️ Controls")
         
         # ETL Pipeline Button
     if st.button("🔄 Refresh Data", key="etl_button"):
         with st.spinner("🔄 Fetching latest market data... This may take 1-2 minutes."):
             import etl
             etl.main()
-    
         st.success("✅ Data updated successfully!")
         st.rerun()
 
@@ -1807,21 +1912,130 @@ def main():
         
         st.success("🧠 Advanced Rule-Based Analytics Active")
         st.info("💡 Sophisticated insights without AI dependencies")
-    
+   
     # Load and validate data
-    @st.cache_data
     def load_and_validate_data():
         """Cache the main data loading to avoid repeated CSV reads"""
         try:
-            df = pd.read_csv("latest_results.csv", parse_dates=["Date"])
-            if df.empty or 'symbol' not in df.columns:
+            import os
+            
+            # Check if file exists (log only, don't show to user)
+            if not os.path.exists("latest_results.csv"):
+                print("❌ File 'latest_results.csv' not found!")  # Console log only
                 return None
+            
+            # Log file info to console
+            file_size = os.path.getsize("latest_results.csv")
+            print(f"📁 Loading CSV file: {file_size:,} bytes")  # Console log only
+            
+            # Load data WITHOUT automatic date parsing
+            df = pd.read_csv("latest_results.csv")
+            
+            print(f"📊 Raw data loaded: {df.shape}")  # Debug
+            print(f"📊 Columns: {list(df.columns)}")  # Debug
+            print(f"📊 Date column sample: {df['Date'].head(3).tolist() if 'Date' in df.columns else 'NO DATE COLUMN'}")  # Debug
+            
+            # Try to parse dates manually with error handling
+            if 'Date' in df.columns:
+                try:
+                    # Handle different date formats that might exist
+                    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+                    print("✅ Date parsing successful")
+                    
+                    # Remove rows with invalid dates
+                    invalid_dates = df['Date'].isna().sum()
+                    if invalid_dates > 0:
+                        print(f"⚠️ Removing {invalid_dates} rows with invalid dates")
+                        df = df.dropna(subset=['Date'])
+                    
+                except Exception as date_error:
+                    print(f"⚠️ Date parsing failed: {date_error}")
+                    # Keep the data anyway - dates as strings are still usable
+            else:
+                print("⚠️ No Date column found")
+            
+            print(f"✅ Final data shape: {df.shape}")  # Debug
+            
+            if df.empty:
+                print("❌ DataFrame is empty after processing")
+                return None
+                
+            if 'symbol' not in df.columns:
+                print("❌ Missing 'symbol' column")
+                print(f"Available columns: {list(df.columns)}")
+                return None
+            
+            print(f"✅ Loaded {len(df):,} records, {df['symbol'].nunique()} symbols")  # Console log only
             return df
-        except Exception:
+            
+        except FileNotFoundError:
+            print("❌ File not found: latest_results.csv")
+            return None
+        except pd.errors.EmptyDataError:
+            print("❌ CSV file is empty")
+            return None
+        except Exception as e:
+            print(f"❌ Error loading data: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return None
+            
+            return df
+            
+        except FileNotFoundError:
+            print("❌ File not found: latest_results.csv")
+            return None
+        except pd.errors.EmptyDataError:
+            print("❌ CSV file is empty")
+            return None
+        except Exception as e:
+            print(f"❌ Error loading data: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return None
     
     # Load and validate data with caching
     df = load_and_validate_data()
+    # === ADD THIS DEBUG SECTION HERE ===
+    print("=== DEBUG: DATA LOADING RESULT ===")
+    try:
+        import os
+        print(f"Current directory: {os.getcwd()}")
+        print(f"Files in directory: {os.listdir('.')}")
+        
+        if os.path.exists('latest_results.csv'):
+            print("✅ latest_results.csv EXISTS")
+            file_size = os.path.getsize('latest_results.csv')
+            print(f"File size: {file_size:,} bytes")
+            
+            # Check what load_and_validate_data() actually returned
+            print(f"df is None: {df is None}")
+            if df is not None:
+                print(f"DataFrame shape: {df.shape}")
+                print(f"Columns: {list(df.columns)}")
+                print(f"Sample data:")
+                print(df.head())
+                print(f"Unique symbols: {df['symbol'].nunique() if 'symbol' in df.columns else 'NO SYMBOL COLUMN'}")
+            else:
+                print("❌ load_and_validate_data() returned None")
+                
+                # Try loading manually to see what fails
+                try:
+                    df_test = pd.read_csv('latest_results.csv', parse_dates=["Date"])
+                    print(f"Manual load successful: {df_test.shape}")
+                    print(f"Manual load columns: {list(df_test.columns)}")
+                except Exception as manual_error:
+                    print(f"Manual load also failed: {manual_error}")
+            
+        else:
+            print("❌ latest_results.csv NOT FOUND")
+            
+    except Exception as e:
+        print(f"❌ Debug error: {e}")
+        import traceback
+        traceback.print_exc()
+    print("=== END DEBUG ===")
+    # === END DEBUG SECTION ===
     if df is None:
         st.error("Failed to load data. Please refresh the data first.")
         st.stop()
@@ -1855,9 +2069,6 @@ def main():
     # Add some spacing after metrics
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Stock Selection
-   # Stock Selection section
-    st.markdown('<div class="section-header"><span class="section-icon">🎯</span><h2>Stock Selection</h2></div>', unsafe_allow_html=True)
 
     @st.cache_data
     def get_processed_symbols(_df):
