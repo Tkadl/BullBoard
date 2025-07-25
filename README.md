@@ -3,7 +3,7 @@
 ## Current BullBoard Capabilities Summary
 
 ### Data Pipeline
-- Processes 487 S&P 500 stocks with 559 days of coverage (186K+ data points)
+- Processes S&P 500 stocks with up to 559 days of coverage (186K+ data points)
 - Downloads OHLCV data via yfinance with batch processing and error handling
 - Real-time data updates from 2024-01-01 to present
 
@@ -23,11 +23,10 @@
 
 ## Current Limitations
 - Basic technical indicators only
-- Data refresh takes 10+ seconds for full dataset
-- Stock selection interface experiences lag
+- Data refresh on startup (without incremental) takes 4+ minutes for full dataset
 - No predictive or forward-looking analytics
 - Limited unique insights vs. existing platforms
-- Processing 487 stocks creates performance bottlenecks
+- Processing 500 stocks creates performance bottlenecks
 
 ## Rough Update Roadmap
 
@@ -75,8 +74,3 @@
 - A/B testing framework for feature optimization
 - User analytics implementation
 - Final UI polish and user onboarding
-
----
-
-### 🎯 Key Focus
-Phase 1 will dramatically improve user experience by fixing the performance issues, making the already impressive analytics feel snappy and professional. This foundation will make all subsequent features feel more polished.
